@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>雙天平偵探｜二元一次聯立方程式列式實驗室</title>
+  <link rel="stylesheet" href="./src/styles/main.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link visually-hidden">跳至主要學習區</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-cluster">
+        <span class="brand-icon" aria-hidden="true">⚖️</span>
+        <div>
+          <h1 class="brand-title">雙天平偵探：二元一次聯立方程式列式實驗室</h1>
+          <p class="brand-subtitle">從文字題「設 x, y → 抓雙線索 → 天平列式 → 交點驗算」一次打通</p>
+        </div>
+      </div>
+
+      <nav class="primary-nav" aria-label="主要模式切換">
+        <button id="nav-campaign" type="button" class="nav-pill is-active">🗺️ 闖關實驗室</button>
+        <button id="nav-sandbox" type="button" class="nav-pill">🔬 為什麼要兩條式子？</button>
+        <button id="nav-practice" type="button" class="nav-pill">🎲 無限隨機練習</button>
+      </nav>
+
+      <div class="header-tools">
+        <span id="hud-total-stars" class="stars-counter" aria-label="累積星星數">⭐ 0 / 36</span>
+        <button id="btn-open-map" type="button" class="tool-btn">🗺️ 第 1 關：珍奶與雞排</button>
+        <button id="btn-open-help" type="button" class="tool-btn" aria-label="開啟操作教學說明">❓ 玩法</button>
+        <button id="btn-toggle-sound" type="button" class="tool-btn" aria-pressed="true">🔊 音效</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="app-main">
+    <div id="game-root" class="game-root"></div>
+  </main>
+
+  <footer class="app-footer">
+    <p>雙天平偵探（國中 108 課綱二元一次聯立方程式應用問題視覺化工具）・離線單檔免伺服器運作</p>
+  </footer>
+
+  <!-- Centralized polite live region outside dialogs -->
+  <div id="sr-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Native Modal Dialog: Level Map -->
+  <dialog id="level-map-dialog" class="lab-dialog" closedby="any" aria-labelledby="level-map-title">
+    <div class="dialog-header">
+      <h2 id="level-map-title">🗺️ 偵探關卡地圖（4 大主題・12 關）</h2>
+      <form method="dialog">
+        <button type="submit" value="close" class="dialog-close-btn" autofocus aria-label="關閉關卡地圖">✕</button>
+      </form>
+    </div>
+    <div id="level-map-body" class="dialog-body"></div>
+  </dialog>
+
+  <!-- Native Modal Dialog: Help Guide -->
+  <dialog id="help-dialog" class="lab-dialog" closedby="any" aria-labelledby="help-title">
+    <div class="dialog-header">
+      <h2 id="help-title">❓ 怎麼把文字題變成兩條方程式？</h2>
+      <form method="dialog">
+        <button type="submit" value="close" class="dialog-close-btn" autofocus aria-label="關閉說明">✕</button>
+      </form>
+    </div>
+    <div class="dialog-body help-body">
+      <ol class="help-list">
+        <li><strong>第 1 步（設未知數）：</strong>看清楚最後在問哪兩個未知量，放進 <span class="var-badge var-x">x</span> 與 <span class="var-badge var-y">y</span>！注意：兩者誰設為 x、誰設為 y 都可以，系統會全程自動跟著你判斷！</li>
+        <li><strong>第 2 步（抓雙線索）：</strong>兩個未知數一定要找「兩句不同的條件」才能鎖定唯一答案；問句本身不是條件式喔。</li>
+        <li><strong>第 3 步（雙天平列式）：</strong>用兩座天平對應兩句話！點選左盤或右盤，放進 x、y 與題目數字磁鐵。「多／加」可以用正砝碼，「少／減」可以用負氣球，甚至左盤寫 <code>x = y + 8</code> 或 <code>x − y = 8</code> 系統都算對！</li>
+        <li><strong>第 4 步（交點驗算）：</strong>兩條式子各代表座標平面上的一條直線，兩條線唯一的交點就是答案！如果兩座天平不小心列成同一句話（重合直線），就會解不出唯一答案喔。</li>
+      </ol>
+    </div>
+  </dialog>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
