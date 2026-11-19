@@ -1,7 +1,11 @@
-import { GameController } from './ui/gameController.js';
+/**
+ * Accessible native <dialog> helper with progressive top-layer exit animation fallback
+ * and bounding-box light-dismiss fallback (`closedby="any"`).
+ */
 
 let supportsDisplayTransition;
-function canTransitionDisplay() {
+
+export function canTransitionDisplay() {
   if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
   if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
     return false;
@@ -16,12 +20,12 @@ function canTransitionDisplay() {
   return supportsDisplayTransition;
 }
 
-function supportsTopLayerExit() {
+export function supportsTopLayerExit() {
   return Boolean(window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay());
 }
 
-async function closeTopLayer(dialog) {
-  if (!dialog.open) return;
+export async function closeTopLayer(dialog) {
+  if (!dialog?.open) return;
   if (!supportsTopLayerExit()) {
     dialog.setAttribute('data-closing', '');
     const animations = dialog.getAnimations({ subtree: true });
@@ -37,8 +41,8 @@ async function closeTopLayer(dialog) {
   dialog.close();
 }
 
-function setupAccessibleDialogs() {
-  const dialogs = Array.from(document.querySelectorAll('dialog.lab-dialog'));
+export function setupAccessibleDialogs(selector = 'dialog.lab-dialog') {
+  const dialogs = Array.from(document.querySelectorAll(selector));
 
   // Fallback for closedby="any" where HTMLDialogElement.prototype.closedBy is unsupported
   if (!('closedBy' in HTMLDialogElement.prototype)) {
@@ -71,31 +75,7 @@ function setupAccessibleDialogs() {
   }
 
   return {
-    map: document.getElementById('level-map-dialog'),
-    help: document.getElementById('help-dialog'),
+    dialogs,
     closeAnimated: closeTopLayer,
   };
-}
-
-function initApp() {
-  const rootEl = document.getElementById('game-root');
-  const announcerEl = document.getElementById('sr-announcer');
-  if (!rootEl) return;
-
-  const announce = (msg) => {
-    if (!announcerEl) return;
-    announcerEl.textContent = '';
-    requestAnimationFrame(() => {
-      announcerEl.textContent = msg;
-    });
-  };
-
-  const dialogs = setupAccessibleDialogs();
-  window.__eqDetective = new GameController(rootEl, dialogs, announce);
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
 }

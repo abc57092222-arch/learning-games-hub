@@ -7,7 +7,7 @@ import {
   playVictory,
   isMuted,
   setMuted,
-} from '../audio/soundEngine.js';
+} from '../../../../shared/audio/soundEngine.js';
 import {
   generatePracticeLevel,
   getVarMeta,

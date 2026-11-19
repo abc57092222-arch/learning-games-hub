@@ -1,17 +1,17 @@
 # 當前上下文與活躍任務 (Active Context)
 
 ## 1. 當前聚焦目標 (Current Focus)
-- 已完成「雙天平偵探：二元一次聯立方程式列式實驗室」純前端離線教育網頁遊戲之開發與全面驗證。
+- 完成多教學遊戲平台（Learning Games Hub）之目錄架構重構，將共用層抽離至 `shared/` 並將「雙天平偵探」整合進 `games/linear-systems/`。
 
 ## 2. 最近完成 (Recently Completed)
-- [x] 完成零依賴純前端模組與數學引擎 (`src/math/equationEngine.js`)：支援 $x/y$ 對調等價、比例/移項/線性組合等價判定、誤區診斷 (`reversed_diff`, `swapped_vars`, `wrong_op_sign`, `missing_unit_multiplier`, `wrong_constant`, `duplicate_clue`) 與物理傾斜計算
-- [x] 建立 4 大主題 12 關卡與 5 種題型無限練習生成器 (`src/data/levels.js`)
-- [x] 實作雙天平 SVG 物理動畫、線段對比圖 (`src/ui/scaleRenderer.js`)、2D 直線交點圖 (`src/ui/graphRenderer.js`) 與「為什麼要兩條式子？」直覺沙盒 (`src/ui/sandboxView.js`)
-- [x] 實作零外部音檔之 Web Audio 程序化音效 (`src/audio/soundEngine.js`) 與無障礙鍵盤/觸控/拖曳控制 (`src/ui/gameController.js`)
-- [x] 通過 `node --test tests/headless-simulation.test.js`（6/6 PASS，含 120 局無頭模擬 0 死鎖）、`node scripts/build.mjs`（單檔離線 `dist/index.html`，185.2 KB）、`verify.ps1`（24/24 PASS）與真實瀏覽器端到端實測
+- [x] 建立根目錄遊戲大廳入口 (`index.html`) 與控制邏輯 (`shared/catalog.js`, `shared/hub.js`, `shared/styles/hub.css`)
+- [x] 抽離共用層至 `shared/`：`tokens.css`（全站變數、按鈕互動與原生 `<dialog>` 頂層動畫）、`soundEngine.js`、`dialogHelper.js`
+- [x] 將「雙天平偵探」完整遷移至 `games/linear-systems/` 並以 `game.json` 自描述模組依賴與樣式
+- [x] 升級 `scripts/build.mjs` 自動掃描 `games/*/game.json` 產出 `dist/index.html` 與各遊戲獨立單檔，並新增腳手架 `scripts/new-game.mjs` (`npm run new-game`)
+- [x] 新增 `shared/tests/catalog.test.js` 驗證登錄目錄與遊戲目錄一致性，整合 `npm test` 覆蓋全站與各遊戲測試
 
 ## 3. 進行中與下一步 (Next Steps)
-- [ ] 如需部署公開網址，可透過 `npx wrangler pages deploy dist` 發布或擴充更多會考應用題型
+- [ ] 依據教學單元規劃新增第二款以後之互動遊戲（使用 `npm run new-game` 快速建立）
 
 ## 4. 當前已知阻礙或風險 (Blockers & Risks)
-- 無阻礙。Node v24.15.0 原生 ESM 與單檔建置腳本皆運作正常。
+- 無阻礙。Node v24.15.0 `node --test` 原生遞迴測試、`scripts/build.mjs` 與瀏覽器實測皆正常運作。

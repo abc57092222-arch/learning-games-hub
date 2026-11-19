@@ -1,5 +1,6 @@
 /**
  * Zero-asset procedural Web Audio sound synthesizer.
+ * Shared across all games in the Learning Games Hub.
  * Safe no-op in headless Node or when audio is muted/blocked.
  */
 
@@ -31,7 +32,7 @@ export function isMuted() {
   return muted;
 }
 
-function playTone({ type = 'sine', freq = 440, endFreq = null, duration = 0.12, gain = 0.12, delay = 0 }) {
+export function playTone({ type = 'sine', freq = 440, endFreq = null, duration = 0.12, gain = 0.12, delay = 0 } = {}) {
   const ctx = getCtx();
   if (!ctx) return;
   const t0 = ctx.currentTime + delay;

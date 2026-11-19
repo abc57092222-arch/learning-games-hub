@@ -5,38 +5,19 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
-const MODULES = [
-  { key: 'equationEngine', file: 'src/math/equationEngine.js' },
-  { key: 'levels', file: 'src/data/levels.js' },
-  { key: 'soundEngine', file: 'src/audio/soundEngine.js' },
-  { key: 'scaleRenderer', file: 'src/ui/scaleRenderer.js' },
-  { key: 'graphRenderer', file: 'src/ui/graphRenderer.js' },
-  { key: 'sandboxView', file: 'src/ui/sandboxView.js' },
-  { key: 'gameController', file: 'src/ui/gameController.js' },
-  { key: 'main', file: 'src/main.js' },
-];
-
-const FILE_TO_KEY = {
-  'equationEngine.js': 'equationEngine',
-  'levels.js': 'levels',
-  'soundEngine.js': 'soundEngine',
-  'scaleRenderer.js': 'scaleRenderer',
-  'graphRenderer.js': 'graphRenderer',
-  'sandboxView.js': 'sandboxView',
-  'gameController.js': 'gameController',
-};
-
-function transformModuleToIIFE(key, code) {
+function transformModuleToIIFE(mod, code, absPath, absPathToKey) {
   const exportedNames = new Set();
+  const dir = path.dirname(absPath);
 
-  // Replace multi-line and single-line named imports with destructuring from __mod_<target>
   let transformed = code.replace(
     /import\s*\{([\s\S]*?)\}\s*from\s*['"]([^'"]+)['"]\s*;/g,
     (_, specifiers, importPath) => {
-      const base = path.basename(importPath);
-      const targetKey = FILE_TO_KEY[base];
+      const targetAbs = path.resolve(dir, importPath);
+      const targetKey = absPathToKey.get(targetAbs);
       if (!targetKey) {
-        throw new Error(`Unknown import target "${importPath}" in module "${key}"`);
+        throw new Error(
+          `Unknown import "${importPath}" (resolved: ${targetAbs}) in module "${mod.path}"`
+        );
       }
       const cleanSpecs = specifiers
         .split(',')
@@ -48,7 +29,6 @@ function transformModuleToIIFE(key, code) {
     }
   );
 
-  // Transform `export function name` / `export async function name` / `export class Name` / `export const NAME`
   transformed = transformed.replace(
     /^export\s+(async\s+)?function\s+([A-Za-z_$][\w$]*)/gm,
     (_, asyncKw, name) => {
@@ -73,44 +53,93 @@ function transformModuleToIIFE(key, code) {
     }
   );
 
-  const returnList = Array.from(exportedNames).join(', ');
-  if (key === 'main') {
+  if (mod.isEntry) {
     return `(() => {\n${transformed}\n})();`;
   }
-  return `const __mod_${key} = (() => {\n${transformed}\nreturn { ${returnList} };\n})();`;
+  const returnList = Array.from(exportedNames).join(', ');
+  return `const __mod_${mod.key} = (() => {\n${transformed}\nreturn { ${returnList} };\n})();`;
 }
 
-function build() {
-  const htmlTemplate = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
-  const cssText = fs.readFileSync(path.join(rootDir, 'src/styles/main.css'), 'utf8');
+function bundleHtmlPage({ baseDir, entryHtml, styles, modules, outPath }) {
+  const htmlTemplate = fs.readFileSync(path.join(baseDir, entryHtml), 'utf8');
 
-  const bundledModules = MODULES.map((m) => {
-    const raw = fs.readFileSync(path.join(rootDir, m.file), 'utf8');
-    return `// === Module: ${m.file} ===\n${transformModuleToIIFE(m.key, raw)}`;
-  }).join('\n\n');
+  const absPathToKey = new Map();
+  for (const mod of modules) {
+    absPathToKey.set(path.resolve(baseDir, mod.path), mod.key);
+  }
+
+  const bundledModules = modules
+    .map((mod) => {
+      const absPath = path.resolve(baseDir, mod.path);
+      const raw = fs.readFileSync(absPath, 'utf8');
+      return `// === Module: ${mod.path} ===\n${transformModuleToIIFE(mod, raw, absPath, absPathToKey)}`;
+    })
+    .join('\n\n');
 
   const wrappedScript = `'use strict';\n${bundledModules}`;
-
-  // Validate syntax cleanly via Function constructor before emitting
   new Function(wrappedScript);
 
-  let outHtml = htmlTemplate.replace(
-    /<link\s+rel="stylesheet"\s+href="\.\/src\/styles\/main\.css"\s*\/?>/,
-    () => `<style>\n${cssText}\n</style>`
+  const combinedCss = styles
+    .map((cssRel) => {
+      const cssAbs = path.resolve(baseDir, cssRel);
+      return `/* === Style: ${cssRel} === */\n${fs.readFileSync(cssAbs, 'utf8')}`;
+    })
+    .join('\n\n');
+
+  let outHtml = htmlTemplate;
+  let stylesInjected = false;
+  outHtml = outHtml.replace(
+    /<link\s+rel="stylesheet"\s+href="[^"]+"\s*\/?>\s*/g,
+    () => {
+      if (stylesInjected) return '';
+      stylesInjected = true;
+      return `<style>\n${combinedCss}\n</style>\n`;
+    }
   );
 
   outHtml = outHtml.replace(
-    /<script\s+type="module"\s+src="\.\/src\/main\.js"><\/script>/,
+    /<script\s+type="module"\s+src="[^"]+"><\/script>/,
     () => `<script>\n${wrappedScript}\n</script>`
   );
 
-  const distDir = path.join(rootDir, 'dist');
-  fs.mkdirSync(distDir, { recursive: true });
-  const outPath = path.join(distDir, 'index.html');
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, outHtml, 'utf8');
 
   const sizeKb = (Buffer.byteLength(outHtml, 'utf8') / 1024).toFixed(1);
-  console.log(`[build] Built standalone offline bundle: ${outPath} (${sizeKb} KB)`);
+  console.log(`[build] Built ${path.relative(rootDir, outPath)} (${sizeKb} KB)`);
 }
 
-build();
+function buildAll() {
+  // 1. Build Root Hub Portal
+  bundleHtmlPage({
+    baseDir: rootDir,
+    entryHtml: 'index.html',
+    styles: ['./shared/styles/tokens.css', './shared/styles/hub.css'],
+    modules: [
+      { key: 'catalog', path: './shared/catalog.js' },
+      { key: 'hub', path: './shared/hub.js', isEntry: true },
+    ],
+    outPath: path.join(rootDir, 'dist/index.html'),
+  });
+
+  // 2. Auto-discover and build every game under games/*/game.json
+  const gamesDir = path.join(rootDir, 'games');
+  if (fs.existsSync(gamesDir)) {
+    const entries = fs.readdirSync(gamesDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+    for (const dir of entries) {
+      const gameDir = path.join(gamesDir, dir.name);
+      const manifestPath = path.join(gameDir, 'game.json');
+      if (!fs.existsSync(manifestPath)) continue;
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      bundleHtmlPage({
+        baseDir: gameDir,
+        entryHtml: manifest.entryHtml || 'index.html',
+        styles: manifest.styles || [],
+        modules: manifest.modules || [],
+        outPath: path.join(rootDir, 'dist/games', dir.name, 'index.html'),
+      });
+    }
+  }
+}
+
+buildAll();

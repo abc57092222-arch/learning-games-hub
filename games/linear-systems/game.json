@@ -1,0 +1,20 @@
+{
+  "id": "linear-systems",
+  "title": "雙天平偵探｜二元一次聯立方程式列式實驗室",
+  "entryHtml": "index.html",
+  "styles": [
+    "../../shared/styles/tokens.css",
+    "./src/styles/game.css"
+  ],
+  "modules": [
+    { "key": "equationEngine", "path": "./src/math/equationEngine.js" },
+    { "key": "levels", "path": "./src/data/levels.js" },
+    { "key": "soundEngine", "path": "../../shared/audio/soundEngine.js" },
+    { "key": "scaleRenderer", "path": "./src/ui/scaleRenderer.js" },
+    { "key": "graphRenderer", "path": "./src/ui/graphRenderer.js" },
+    { "key": "sandboxView", "path": "./src/ui/sandboxView.js" },
+    { "key": "gameController", "path": "./src/ui/gameController.js" },
+    { "key": "dialogHelper", "path": "../../shared/ui/dialogHelper.js" },
+    { "key": "main", "path": "./src/main.js", "isEntry": true }
+  ]
+}

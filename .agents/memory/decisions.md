@@ -45,3 +45,26 @@
 ### 後果 (Consequences)
 - **正面效果**：免伺服器即可於桌面與行動裝置離線操作；純函數核心可直接由 Node 24 原生測試 runner 進行百局以上無頭驗證。
 - **權衡取捨**：自製 IIFE bundler 依賴靜態具名 `import/export` 語法，未來新增 JS 檔案時須同步登記於 `scripts/build.mjs` 之模組清單。
+
+---
+
+## ADR-003: 多教學遊戲集合平台目錄結構 (`shared/` + `games/<slug>/` + Manifest Bundler)
+
+- **日期**：2026-11-19
+- **狀態**：Accepted (已採納)
+
+### 背景 (Context)
+使用者計畫在此專案下持續新增多款互動教學遊戲，原本將單一遊戲檔案直接置於根目錄 `src/` 與 `tests/` 會隨遊戲數量增加而變得混亂，難以共用設計系統與離線打包。
+
+### 決策 (Decision)
+1. **分層目錄結構**：
+   - 根目錄 `index.html` 改為「互動教學遊戲實驗室」大廳入口，支援學科分類、關鍵字搜尋與各遊戲 `localStorage` 星星進度讀取。
+   - `shared/` 集中存放跨遊戲共用資產：`catalog.js`、`hub.js`、`audio/soundEngine.js`、`ui/dialogHelper.js`、`styles/tokens.css`、`styles/hub.css` 與結構驗證測試 `tests/catalog.test.js`。
+   - `games/<slug>/` 採完全獨立封裝（`game.json`、`index.html`、`src/`、`tests/`），每個遊戲皆附「🏠 回遊戲大廳」連結。
+2. **Manifest 驅動離線建置與腳手架**：
+   - `scripts/build.mjs` 自動掃描 `games/*/game.json`，透過絕對路徑解析完成跨 `shared/` 與 `src/` 相依模組之無衝突 IIFE 封裝，輸出至 `dist/index.html` 與 `dist/games/<slug>/index.html`。
+   - 新增 `scripts/new-game.mjs`（`npm run new-game`）自動化生成新遊戲目錄、測試骨架並自動註冊至 `shared/catalog.js`。
+
+### 後果 (Consequences)
+- **正面效果**：新增遊戲零摩擦且彼此隔離，離線單檔分發與 Node 24 自動化測試同步維持零外部依賴。
+- **權衡取捨**：每個遊戲目錄需維護 `game.json` 模組順序；新增或調整目錄時由 `shared/tests/catalog.test.js` 自動守護一致性。

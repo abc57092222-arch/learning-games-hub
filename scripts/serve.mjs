@@ -20,12 +20,16 @@ const MIME = {
 const server = http.createServer((req, res) => {
   const urlPath = (req.url || '/').split('?')[0];
   const relPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
-  const fullPath = path.resolve(rootDir, relPath);
+  let fullPath = path.resolve(rootDir, relPath);
 
   if (!fullPath.startsWith(rootDir)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
+  }
+
+  if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+    fullPath = path.join(fullPath, 'index.html');
   }
 
   fs.readFile(fullPath, (err, data) => {
@@ -41,5 +45,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`[serve] Equation Detective Lab listening at http://127.0.0.1:${PORT}/index.html`);
+  console.log(`[serve] Learning Games Hub listening at http://127.0.0.1:${PORT}/index.html`);
 });

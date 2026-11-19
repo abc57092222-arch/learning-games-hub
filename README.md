@@ -1,60 +1,67 @@
-# 2026-11-20 專案基礎
+# 互動教學遊戲實驗室（Learning Games Hub）
 
-本專案目錄已全面實施 **Agent 最佳基礎實踐架構**，深度整合 Antigravity / Gemini 多代理人蜂群協同協定，具備完整的專案級技能庫 (Project-Scoped Skills)、持久化記憶庫 (Memory)、模組化規範 (Rules) 以及版本控制防禦機制 (Git Guard)。
+本專案採用 **Zero-Server / Offline-First 模組化多遊戲架構**，共用設計令牌、音訊引擎與無障礙彈窗元件置於 `shared/`，各教學遊戲獨立封裝於 `games/<slug>/`，並可透過一鍵打包腳本產出全離線單檔 HTML。
 
 ---
 
-## 專案架構概覽
+## 目錄架構總覽
 
 ```text
 .
-├── .agents/                               # Antigravity 專案級自定義標準目錄
-│   ├── memory/                            # 跨工作階段持久化記憶庫
-│   │   ├── active_context.md              # 當前聚焦目標與下一步行動
-│   │   ├── decisions.md                   # 架構決策紀錄 (ADR)
-│   │   ├── learnings.md                   # 環境特性與踩坑教訓 (Windows 編碼防禦)
-│   │   ├── project_context.md             # 專案背景與技術哲學
-│   │   └── scratchpad.md                  # 即時暫存記事
-│   ├── rules/                             # 模組化規範清單
-│   │   ├── coding-standards.md            # 代碼標準與微創手術原則
-│   │   ├── git-and-worktrees.md           # 蜂群實體 Worktree 隔離與操作守則
-│   │   └── memory-management.md           # 記憶系統維護與同步協定
-│   └── skills/                            # 專案專用技能庫 (Project-Scoped Skills)
-│       ├── project-onboarding/            # 代理人快速上手與對齊
-│       ├── session-memory-sync/           # 會話記憶讀寫與交接
-│       ├── verification-runner/           # 自動化基礎設施驗證器
-│       └── worktree-manager/              # 蜂群子代理人 Worktree 自動隔離管理
-├── .gitattributes                         # Windows CRLF / LF 防禦與換行規範
-├── .gitignore                             # 全端、環境與 Agent 忽略規則
-├── AGENTS.md                              # 蜂群協同手冊與反偷懶鐵律
-├── GEMINI.md                              # 專案運行憲章與極簡 No-Server 標準
-├── MEMORY.md                              # 專案記憶導航入口
-└── README.md                              # 專案首頁說明文件
+├── index.html                                # 互動教學遊戲大廳（學科篩選、關鍵字搜尋、星數總覽）
+├── package.json                              # 專案指令（test / build / serve / new-game）
+├── shared/                                   # 跨遊戲共用核心層
+│   ├── catalog.js                            # 遊戲登錄目錄（名稱、科目、年級、路徑、星數設定）
+│   ├── hub.js                                # 大廳搜尋與卡片渲染控制器
+│   ├── audio/soundEngine.js                  # 零資源 Web Audio API 程序化音效引擎
+│   ├── ui/dialogHelper.js                    # 原生 <dialog> 無障礙與頂層動畫降級輔助
+│   ├── styles/
+│   │   ├── tokens.css                        # 全域設計變數、按鈕互動態、焦點環、彈窗基礎樣式
+│   │   └── hub.css                           # 遊戲大廳響應式卡片網格樣式
+│   └── tests/catalog.test.js                 # 目錄與 games/*/game.json 一致性驗證
+├── games/                                    # 各獨立教學遊戲目錄
+│   └── linear-systems/                       # 雙天平偵探：二元一次聯立方程式列式實驗室
+│       ├── game.json                         # 遊戲自描述清單（供自動打包器讀取）
+│       ├── index.html                        # 遊戲入口頁（含回遊戲大廳導覽）
+│       ├── src/                              # 遊戲專屬數學引擎、關卡資料與視覺元件
+│       └── tests/                            # 遊戲專屬無頭自動化測試
+├── scripts/
+│   ├── build.mjs                             # 自動掃描 games/*/game.json 打包至 dist/
+│   ├── serve.mjs                             # 本機靜態開發伺服器
+│   └── new-game.mjs                          # 新遊戲快速腳手架產生器
+└── dist/                                     # （Git 忽略）離線單檔發布產物（雙擊即可玩）
 ```
 
 ---
 
-## 快速上手與常用操作
+## 常用指令
 
-### 1. 執行基礎設施健康度檢查
+### 1. 啟動本機開發預覽
 ```powershell
-powershell -ExecutionPolicy Bypass -File .agents/skills/verification-runner/scripts/verify.ps1
+npm run serve
 ```
+開啟 `http://127.0.0.1:4173/index.html` 即可瀏覽遊戲大廳並進入各款教學遊戲。
 
-### 2. 蜂群子代理人 Worktree 隔離操作
+### 2. 執行全站與所有遊戲測試
 ```powershell
-# 建立子代理人專用 Worktree
-powershell -ExecutionPolicy Bypass -File .agents/skills/worktree-manager/scripts/worktree.ps1 -Action add -Branch feat/subagent-task -Path ../wt-subagent-task
-
-# 查看工作樹列表
-powershell -ExecutionPolicy Bypass -File .agents/skills/worktree-manager/scripts/worktree.ps1 -Action list
-
-# 清理工作樹
-powershell -ExecutionPolicy Bypass -File .agents/skills/worktree-manager/scripts/worktree.ps1 -Action remove -Path ../wt-subagent-task
+npm test
 ```
+自動執行 `shared/tests/` 目錄一致性驗證與 `games/*/tests/` 內的所有無頭模擬測試。
 
-### 3. Windows PowerShell 編碼宣告
-執行任何包含非 ASCII 字元之指令前，請宣告：
+### 3. 打包成離線雙擊單檔版（`dist/`）
+```powershell
+npm run build
+```
+輸出 `dist/index.html` 與每個遊戲的 `dist/games/<slug>/index.html`。
+
+### 4. 快速新增一款新教學遊戲
+```powershell
+npm run new-game -- pythagorean-lab "畢氏定理拼圖實驗室" "數學" "國中八年級"
+```
+會自動在 `games/pythagorean-lab/` 建立合規起始架構（含 `game.json`、`index.html`、`src/`、`tests/`），並自動登錄進 `shared/catalog.js`！
+
+### 5. 基礎設施健康度驗證與 Windows 編碼宣告
 ```powershell
 $env:PYTHONIOENCODING="utf-8"; chcp 65001 | Out-Null
+powershell -ExecutionPolicy Bypass -File .agents/skills/verification-runner/scripts/verify.ps1
 ```
