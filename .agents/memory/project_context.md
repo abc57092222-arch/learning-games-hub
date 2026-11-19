@@ -16,4 +16,4 @@
 - `index.html` & `shared/`：遊戲大廳首頁 (`hub.js`)、登錄目錄 (`catalog.js`)、共用樣式 (`tokens.css`, `hub.css`)、音訊 (`soundEngine.js`) 與無障礙彈窗 (`dialogHelper.js`)。
 - `games/<slug>/`：各獨立教學遊戲（含 `game.json`、獨立入口、核心邏輯與無頭測試）。目前收錄 `linear-systems`（雙天平偵探）。
 - `scripts/`：離線建置 (`build.mjs`)、靜態伺服器 (`serve.mjs`)、新遊戲腳手架 (`new-game.mjs`)。
-- `.agents/`、`AGENTS.md`、`GEMINI.md`：專案規範、跨對話記憶與專案技能庫。
+- `.agents/`、`AGENTS.md`、`GEMINI.md`：專案規範、跨對話記憶，以及 8 套受 Git 追蹤的專案級技能庫（`project-onboarding`、`session-memory-sync`、`worktree-manager`、`verification-runner`、`modern-web-guidance`、`learning-game-builder`、`cloudflare-pages-deploy`、`git-commit-push`）。

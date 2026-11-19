@@ -68,3 +68,22 @@
 ### 後果 (Consequences)
 - **正面效果**：新增遊戲零摩擦且彼此隔離，離線單檔分發與 Node 24 自動化測試同步維持零外部依賴。
 - **權衡取捨**：每個遊戲目錄需維護 `game.json` 模組順序；新增或調整目錄時由 `shared/tests/catalog.test.js` 自動守護一致性。
+
+---
+
+## ADR-004: 整合核心工作流為 Project-Scoped Skills 並建立安全 Git Commit & Push 技能
+
+- **日期**：2026-11-20
+- **狀態**：Accepted (已採納)
+
+### 背景 (Context)
+專案自初始化至今已形成清晰的跨回合工作流（基礎設施導入與記憶同步、現代 Web 標準查詢、互動教學遊戲建置、Cloudflare Pages 部署、以及自動化驗證與提交推送）。原先部分技能分散於全域或外掛目錄（甚至內含獨立 `.git/`），難以隨專案版本控制跨機器完整重現，也缺乏專案統一的 Git 提交與推送防呆機制。
+
+### 決策 (Decision)
+1. 將專案目前實際使用的 8 項核心技能統一收斂至 `.agents/skills/`：保留並升級 `project-onboarding`、`session-memory-sync`、`worktree-manager`、`verification-runner`；乾淨引入 `modern-web-guidance` 與 `cloudflare-pages-deploy`（僅複製 `SKILL.md` 與 `LICENSE`，絕不帶入嵌套 `.git`）；並新增針對本專案的 `learning-game-builder` 與 `git-commit-push`。
+2. 排除與本專案離線靜態教育遊戲無關或依賴本機尚未配置 MCP 的全域/外掛技能，維持技能庫精實無冗餘。
+3. 透過 `verification-runner`（`verify.ps1`）強制檢測所有技能目錄之 YAML Frontmatter、Git 可追蹤性、無嵌套 `.git`、無個人路徑及 `npm test` / `npm run build` 通過；並以 `git-commit-push.ps1` 提供 PowerShell 5.1/7 相容的安全提交與遠端同步驗證。
+
+### 後果 (Consequences)
+- **正面效果**：任何開發者或 AI 代理人在 clone 專案後即可取得完整專案級技能；徹底杜絕 Git submodule（mode `160000`）誤入與敏感檔/建置產物誤推風險。
+- **權衡取捨**：未來新增技能或升級全域來源技能時，需同步更新 `.agents/skills/` 並通過 `verify.ps1` 檢查。

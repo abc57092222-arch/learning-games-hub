@@ -19,6 +19,8 @@ git worktree prune
 ```
 或直接調用本專案專屬技能：`worktree-manager` 的自動化腳本。
 
-## 3. 提交守則
-- 每個功能單元保持原子化提交 (Atomic Commits)。
-- 提交前必須進行語法與格式驗證，嚴禁將未經驗證或編譯錯誤的代碼推入主分支。
+## 3. 提交與推送守則
+- 每個功能單元保持原子化提交 (Atomic Commits)，遵循 Conventional Commits 格式。
+- 提交前必須通過語法、測試與技能衛生驗證，嚴禁將未經驗證、含敏感資訊或 `dist/` 建置產物推入主分支。
+- `.agents/skills/` 內嚴禁存在任何嵌套 `.git` 目錄/檔案或個人本機絕對路徑，確保所有專案技能可完整受 Git 追蹤並跨環境重現。
+- 推薦統一使用專案技能 `git-commit-push`（`.agents/skills/git-commit-push/scripts/git-commit-push.ps1`）進行驗證、提交與推送（支援 `-DryRun` 預覽，且嚴禁 `--force` 推送）。

@@ -65,3 +65,23 @@ npm run new-game -- pythagorean-lab "畢氏定理拼圖實驗室" "數學" "國�
 $env:PYTHONIOENCODING="utf-8"; chcp 65001 | Out-Null
 powershell -ExecutionPolicy Bypass -File .agents/skills/verification-runner/scripts/verify.ps1
 ```
+
+---
+
+## 專案級技能（`.agents/skills/`）
+
+專案所有常用 AI 代理人工作流已內建為受 Git 追蹤的專案級技能：
+- `project-onboarding`：專案導入、規範對齊與開發指令速查
+- `session-memory-sync`：跨對話記憶庫（`.agents/memory/`）與 ADR 決策維護
+- `worktree-manager`：多代理人並行開發的 Git Worktree 管理
+- `verification-runner`：Git、規範、技能衛生檢查與 `npm test` / `npm run build` 驗證
+- `modern-web-guidance`：現代 Web HTML/CSS/DOM 最佳實踐查詢指南
+- `learning-game-builder`：互動教學小遊戲建立、IIFE 打包規範與無頭測試流程
+- `cloudflare-pages-deploy`：透過 Wrangler OAuth 部署 `dist/` 至 Cloudflare Pages
+- `git-commit-push`：自動化 Conventional Commit 驗證、安全檢核與推送遠端
+
+使用 `git-commit-push` 一鍵驗證、提交並推送至遠端範例：
+```powershell
+$env:PYTHONIOENCODING="utf-8"; chcp 65001 | Out-Null
+powershell -ExecutionPolicy Bypass -File .agents/skills/git-commit-push/scripts/git-commit-push.ps1 -Message "feat: describe your change" -Paths @(".agents", "README.md")
+```
