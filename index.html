@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>互動教學遊戲實驗室｜Learning Games Hub</title>
+  <style>
+/* === Style: ./shared/styles/tokens.css === */
+:root {
+  --bg-canvas: #faf6ee;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --ink-primary: #1e293b;
+  --ink-secondary: #475569;
+  --border-soft: #cbd5e1;
+
+  --x-color: #1d4ed8;
+  --x-bg: #dbeafe;
+  --y-color: #b45309;
+  --y-bg: #fef3c7;
+
+  --clue1-color: #4338ca;
+  --clue1-bg: #e0e7ff;
+  --clue2-color: #047857;
+  --clue2-bg: #d1fae5;
+
+  --ok-color: #15803d;
+  --ok-bg: #dcfce7;
+  --err-color: #b91c1c;
+  --err-bg: #fee2e2;
+
+  --target-size: 24px;
+  --radius-lg: 16px;
+  --radius-md: 11px;
+  --shadow-card: 0 4px 14px rgb(15 23 42 / 0.06);
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+  margin-top: 0;
+}
+
+p, li {
+  text-wrap: pretty;
+}
+
+:where(a, code) {
+  overflow-wrap: anywhere;
+}
+
+img, svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+/* Visually hidden utility (accessible to screen readers; reveals on focus) */
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1000;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Minimum touch/click target sizing & natural interaction feedback */
+:where(button, select, textarea, input:not([type="checkbox"], [type="radio"]), [role="button"], nav a, .back-hub-link, label:has(input[type="checkbox"], input[type="radio"])) {
+  min-block-size: var(--target-size);
+  min-inline-size: var(--target-size);
+}
+
+:where(button) {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 150ms ease-out, scale 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+button:active:not(:disabled) {
+  scale: 0.97;
+}
+
+button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #1e293b;
+  outline-offset: 3px;
+}
+
+/* Shared Header, Main & Footer */
+.app-header {
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 0.75rem max(1rem, env(safe-area-inset-right, 0px)) 0.75rem max(1rem, env(safe-area-inset-left, 0px));
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+.header-inner {
+  max-width: 1240px;
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: clamp(1.02rem, 1.5vw, 1.25rem);
+  font-weight: 800;
+  margin: 0;
+  color: var(--ink-primary);
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.primary-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.nav-pill, .tool-btn, .pill-btn {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.back-hub-link:hover {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+.nav-pill.is-active, .pill-btn.is-active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stars-counter {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 2rem max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+  padding: 0.9rem 1rem max(0.9rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+/* Native <dialog> styling & Top-Layer Animations */
+dialog.lab-dialog {
+  width: min(92vw, 820px);
+  max-height: 86dvh;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  background: #ffffff;
+  color: var(--ink-primary);
+  box-shadow: 0 24px 48px rgb(15 23 42 / 0.25);
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.lab-dialog {
+    transform: scale(0.94);
+  }
+}
+
+dialog.lab-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.lab-dialog::backdrop {
+  background-color: rgba(15, 23, 42, 0);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  transition-property: background-color, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    transform: scale(1);
+  }
+  @starting-style {
+    :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+      transform: scale(0.94);
+    }
+  }
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+  background-color: rgba(15, 23, 42, 0.48);
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(15, 23, 42, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.lab-dialog,
+  dialog.lab-dialog::backdrop {
+    transition-duration: 0.1s;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.dialog-close-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-weight: 800;
+}
+
+.dialog-body {
+  padding: 1rem 1.2rem;
+  overflow-y: auto;
+}
+
+
+/* === Style: ./shared/styles/hub.css === */
+.hub-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.5rem;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hub-hero-text h2 {
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  margin-bottom: 0.35rem;
+}
+
+.hub-hero-text p {
+  margin: 0;
+  color: var(--ink-secondary);
+}
+
+.hub-stats-pill {
+  background: #fef3c7;
+  border: 1.5px solid #fcd34d;
+  color: #92400e;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.hub-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 1.1rem;
+}
+
+.hub-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.hub-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+
+.hub-search-input {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid #94a3b8;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--ink-primary);
+}
+
+.hub-grid-container {
+  container: hubgrid / inline-size;
+}
+
+.hub-games-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@container hubgrid (inline-size > 40rem) {
+  .hub-games-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container hubgrid (inline-size > 64rem) {
+  .hub-games-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.hub-game-card {
+  background: var(--bg-card);
+  border: 2px solid #cbd5e1;
+  border-top: 5px solid var(--card-accent, #4f46e5);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.hub-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hub-card-icon {
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.hub-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.hub-subject-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+}
+
+.hub-grade-badge {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+}
+
+.hub-card-title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.hub-card-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+  flex: 1 0 auto;
+}
+
+.hub-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hub-tag {
+  font-size: 0.76rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+}
+
+.hub-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.hub-progress-text {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #92400e;
+}
+
+.play-link {
+  background: #2563eb;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 0.5rem 1.05rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: box-shadow 150ms ease-out, scale 150ms ease-out;
+}
+
+.play-link:hover {
+  box-shadow: 0 3px 10px rgb(37 99 235 / 0.32);
+}
+
+.play-link:active {
+  scale: 0.97;
+}
+
+.hub-empty-state {
+  background: #ffffff;
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--ink-secondary);
+  font-weight: 700;
+}
+
+.hub-author-tip {
+  margin-top: 1.5rem;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.15rem;
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+}
+
+.hub-author-tip code {
+  background: #f1f5f9;
+  padding: 0.14rem 0.4rem;
+  border-radius: 6px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+</style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link visually-hidden">跳至遊戲列表</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-cluster">
+        <span class="brand-icon" aria-hidden="true">🧪</span>
+        <div>
+          <h1 class="brand-title">互動教學遊戲實驗室（Learning Games Hub）</h1>
+          <p class="brand-subtitle">國中・國小跨單元概念視覺化互動遊戲集散地・全離線零伺服器運行</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="app-main">
+    <div id="hub-root"></div>
+  </main>
+
+  <footer class="app-footer">
+    <p>互動教學遊戲實驗室・純前端原生 HTML / CSS / ES Modules 打造・支援離線單檔雙擊開啟</p>
+  </footer>
+
+  <div id="sr-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+'use strict';
+// === Module: ./shared/catalog.js ===
+const __mod_catalog = (() => {
+/**
+ * Central Learning Games Catalog.
+ * Add a new entry here whenever adding a game under `games/<id>/`
+ * (or run `npm run new-game -- <slug> "<title>" [subject] [grade]`).
+ */
+const GAME_CATALOG = [
+  {
+    id: 'linear-systems',
+    title: '雙天平偵探：二元一次聯立方程式列式實驗室',
+    shortTitle: '雙天平偵探',
+    subject: '數學',
+    grade: '國中七年級',
+    icon: '⚖️',
+    accent: '#4f46e5',
+    tags: ['應用題列式', '設未知數', '線段圖', '雙直線交點'],
+    description:
+      '從文字題「設 x, y → 抓雙線索 → 雙天平列式 → 2D 座標交點驗算」四步驟打通聯立方程式應用題！內含 12 關卡、無限隨機題庫與「為什麼要兩條式子？」直覺沙盒。',
+    entry: './games/linear-systems/index.html',
+    storageKey: 'eq_detective_progress_v1',
+    maxStars: 36,
+  },
+  {
+    id: 'multiplication-grid',
+    title: '九九乘法冒險島：直覺探索與速算實驗室',
+    shortTitle: '九九乘法冒險島',
+    subject: '數學',
+    grade: '小學三年級數學',
+    icon: '✖️',
+    accent: '#0284c7',
+    tags: ['九九乘法', '點陣圖', '乘法交換律', '迷思診斷', '四則運算'],
+    description:
+      '融合視覺點陣圖、乘法交換律旋轉視角、相鄰推導與情境應用題！提供 10 關冒險挑戰、探索沙盒與完整 9x9 大表，內建誤乘為加與口訣混淆智慧診斷。',
+    entry: './games/multiplication-grid/index.html',
+    storageKey: 'multiplication_grid_progress_v1',
+    maxStars: 30,
+  },
+];
+
+return { GAME_CATALOG };
+})();
+
+// === Module: ./shared/hub.js ===
+(() => {
+const { GAME_CATALOG } = __mod_catalog;
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function readGameStars(storageKey) {
+  if (!storageKey) return 0;
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw);
+    const starsMap = parsed?.stars || {};
+    return Object.values(starsMap).reduce((sum, n) => sum + (Number(n) || 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+function initHub() {
+  const root = document.getElementById('hub-root');
+  const announcer = document.getElementById('sr-announcer');
+  if (!root) return;
+
+  const state = {
+    subject: '全部',
+    query: '',
+  };
+
+  const subjects = ['全部', ...Array.from(new Set(GAME_CATALOG.map((g) => g.subject)))];
+
+  const announce = (msg) => {
+    if (!announcer) return;
+    announcer.textContent = '';
+    requestAnimationFrame(() => {
+      announcer.textContent = msg;
+    });
+  };
+
+  function getFilteredGames() {
+    const q = state.query.trim().toLowerCase();
+    return GAME_CATALOG.filter((game) => {
+      if (state.subject !== '全部' && game.subject !== state.subject) return false;
+      if (!q) return true;
+      const haystack = [
+        game.title,
+        game.shortTitle,
+        game.subject,
+        game.grade,
+        game.description,
+        ...(game.tags || []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
+  function renderCardsOnly() {
+    const gridHost = document.getElementById('hub-cards-host');
+    if (!gridHost) return;
+    const items = getFilteredGames();
+    if (items.length === 0) {
+      gridHost.innerHTML = `<div class="hub-empty-state">找不到符合「${escapeHtml(state.query)}」的教學遊戲，請嘗試其他關鍵字或切換學科分類。</div>`;
+      return;
+    }
+
+    gridHost.innerHTML = `
+      <div class="hub-games-grid">
+        ${items
+          .map((game) => {
+            const stars = readGameStars(game.storageKey);
+            const maxStars = game.maxStars || 0;
+            const progressLabel =
+              maxStars > 0 ? `⭐ ${stars} / ${maxStars}` : '✨ 探索學習';
+            return `
+              <article class="hub-game-card" style="--card-accent: ${escapeHtml(game.accent || '#4f46e5')}">
+                <div class="hub-card-top">
+                  <span class="hub-card-icon" aria-hidden="true">${game.icon || '🎮'}</span>
+                  <div class="hub-card-badges">
+                    <span class="hub-subject-badge">${escapeHtml(game.subject)}</span>
+                    <span class="hub-grade-badge">${escapeHtml(game.grade)}</span>
+                  </div>
+                </div>
+                <h3 class="hub-card-title">${escapeHtml(game.title)}</h3>
+                <p class="hub-card-desc">${escapeHtml(game.description)}</p>
+                <div class="hub-card-tags">
+                  ${(game.tags || []).map((t) => `<span class="hub-tag">#${escapeHtml(t)}</span>`).join('')}
+                </div>
+                <div class="hub-card-footer">
+                  <span class="hub-progress-text">${progressLabel}</span>
+                  <a class="play-link" href="${escapeHtml(game.entry)}">▶ 開始遊玩</a>
+                </div>
+              </article>
+            `;
+          })
+          .join('')}
+      </div>
+    `;
+  }
+
+  function renderFull() {
+    const totalEarned = GAME_CATALOG.reduce((sum, g) => sum + readGameStars(g.storageKey), 0);
+    const totalMax = GAME_CATALOG.reduce((sum, g) => sum + (g.maxStars || 0), 0);
+
+    root.innerHTML = `
+      <section class="hub-hero" aria-labelledby="hub-welcome-title">
+        <div class="hub-hero-text">
+          <h2 id="hub-welcome-title">🎓 選擇一款互動式概念實驗室開始探索</h2>
+          <p>每套遊戲皆為零安裝純前端設計，支援離線遊玩、視覺化互動推理與即時診斷回饋。</p>
+        </div>
+        <div class="hub-stats-pill">
+          📚 已收錄 ${GAME_CATALOG.length} 款遊戲${totalMax > 0 ? ` ｜ ⭐ 總進度 ${totalEarned} / ${totalMax}` : ''}
+        </div>
+      </section>
+
+      <div class="hub-toolbar">
+        <div class="hub-filters" role="group" aria-label="依學科篩選遊戲">
+          ${subjects
+            .map(
+              (sub) => `
+            <button type="button"
+              class="pill-btn ${state.subject === sub ? 'is-active' : ''}"
+              data-hub-subject="${escapeHtml(sub)}"
+              aria-pressed="${state.subject === sub}">
+              ${escapeHtml(sub)}
+            </button>
+          `
+            )
+            .join('')}
+        </div>
+
+        <div class="hub-search-box">
+          <label class="visually-hidden" for="hub-search">搜尋教學遊戲</label>
+          <input id="hub-search" type="search" class="hub-search-input" placeholder="🔍 搜尋單元、主題或年級…" value="${escapeHtml(state.query)}" />
+        </div>
+      </div>
+
+      <div id="hub-cards-host" class="hub-grid-container"></div>
+
+      <aside class="hub-author-tip" aria-label="新增教學遊戲開發說明">
+        <strong>🛠️ 擴充更多遊戲：</strong> 在專案根目錄執行 <code>npm run new-game -- &lt;slug&gt; "遊戲標題" "數學" "國中七年級"</code>，即可自動建立 <code>games/&lt;slug&gt;/</code> 範本並註冊至遊戲大廳！
+      </aside>
+    `;
+
+    renderCardsOnly();
+  }
+
+  root.addEventListener('click', (e) => {
+    const subjBtn = e.target.closest('[data-hub-subject]');
+    if (!subjBtn) return;
+    state.subject = subjBtn.getAttribute('data-hub-subject');
+    renderFull();
+    announce(`已篩選學科：${state.subject}，共 ${getFilteredGames().length} 款遊戲`);
+  });
+
+  root.addEventListener('input', (e) => {
+    if (e.target.id === 'hub-search') {
+      state.query = e.target.value;
+      renderCardsOnly();
+    }
+  });
+
+  renderFull();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHub);
+} else {
+  initHub();
+}
+
+})();
+</script>
+</body>
+</html>

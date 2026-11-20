@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>九九乘法冒險島：直覺探索與速算實驗室</title>
+  <style>
+/* === Style: ../../shared/styles/tokens.css === */
+:root {
+  --bg-canvas: #faf6ee;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --ink-primary: #1e293b;
+  --ink-secondary: #475569;
+  --border-soft: #cbd5e1;
+
+  --x-color: #1d4ed8;
+  --x-bg: #dbeafe;
+  --y-color: #b45309;
+  --y-bg: #fef3c7;
+
+  --clue1-color: #4338ca;
+  --clue1-bg: #e0e7ff;
+  --clue2-color: #047857;
+  --clue2-bg: #d1fae5;
+
+  --ok-color: #15803d;
+  --ok-bg: #dcfce7;
+  --err-color: #b91c1c;
+  --err-bg: #fee2e2;
+
+  --target-size: 24px;
+  --radius-lg: 16px;
+  --radius-md: 11px;
+  --shadow-card: 0 4px 14px rgb(15 23 42 / 0.06);
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+  margin-top: 0;
+}
+
+p, li {
+  text-wrap: pretty;
+}
+
+:where(a, code) {
+  overflow-wrap: anywhere;
+}
+
+img, svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+/* Visually hidden utility (accessible to screen readers; reveals on focus) */
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1000;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Minimum touch/click target sizing & natural interaction feedback */
+:where(button, select, textarea, input:not([type="checkbox"], [type="radio"]), [role="button"], nav a, .back-hub-link, label:has(input[type="checkbox"], input[type="radio"])) {
+  min-block-size: var(--target-size);
+  min-inline-size: var(--target-size);
+}
+
+:where(button) {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 150ms ease-out, scale 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+button:active:not(:disabled) {
+  scale: 0.97;
+}
+
+button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #1e293b;
+  outline-offset: 3px;
+}
+
+/* Shared Header, Main & Footer */
+.app-header {
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 0.75rem max(1rem, env(safe-area-inset-right, 0px)) 0.75rem max(1rem, env(safe-area-inset-left, 0px));
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+.header-inner {
+  max-width: 1240px;
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: clamp(1.02rem, 1.5vw, 1.25rem);
+  font-weight: 800;
+  margin: 0;
+  color: var(--ink-primary);
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.primary-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.nav-pill, .tool-btn, .pill-btn {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.back-hub-link:hover {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+.nav-pill.is-active, .pill-btn.is-active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stars-counter {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 2rem max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+  padding: 0.9rem 1rem max(0.9rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+/* Native <dialog> styling & Top-Layer Animations */
+dialog.lab-dialog {
+  width: min(92vw, 820px);
+  max-height: 86dvh;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  background: #ffffff;
+  color: var(--ink-primary);
+  box-shadow: 0 24px 48px rgb(15 23 42 / 0.25);
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.lab-dialog {
+    transform: scale(0.94);
+  }
+}
+
+dialog.lab-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.lab-dialog::backdrop {
+  background-color: rgba(15, 23, 42, 0);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  transition-property: background-color, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    transform: scale(1);
+  }
+  @starting-style {
+    :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+      transform: scale(0.94);
+    }
+  }
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+  background-color: rgba(15, 23, 42, 0.48);
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(15, 23, 42, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.lab-dialog,
+  dialog.lab-dialog::backdrop {
+    transition-duration: 0.1s;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.dialog-close-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-weight: 800;
+}
+
+.dialog-body {
+  padding: 1rem 1.2rem;
+  overflow-y: auto;
+}
+
+
+/* === Style: ./src/styles/game.css === */
+/* Multiplication Grid & Adventure styling */
+
+.game-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3) var(--space-12);
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.game-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--bg-surface);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.stat-stars {
+  color: #d97706;
+}
+
+/* Tabs */
+.mode-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  background: var(--bg-surface-elevated, #f1f5f9);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background: var(--bg-surface, #ffffff);
+  color: var(--color-primary-600, #0284c7);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Screen Layouts */
+.screen-panel {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Sandbox Visualizer */
+.sandbox-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: var(--bg-surface-elevated, #f8fafc);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.number-selector {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.num-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.num-pill:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+.num-pill.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.viz-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.array-svg-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.array-svg {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.formula-card {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Adventure Map & Play Card */
+.level-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.level-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  text-align: left;
+}
+
+.level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #0284c7;
+}
+
+.level-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.level-number {
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.level-stars {
+  font-size: var(--font-size-sm);
+  color: #d97706;
+}
+
+.level-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* Play Screen */
+.quiz-card {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.quiz-progress-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: #0284c7;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.quiz-prompt-box {
+  background: #f0f9ff;
+  border: 2px solid #bae6fd;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.quiz-prompt {
+  font-size: var(--font-size-3xl);
+  font-weight: 900;
+  color: #0c4a6e;
+  margin-bottom: var(--space-2);
+}
+
+.quiz-hint-text {
+  font-size: var(--font-size-sm);
+  color: #0369a1;
+}
+
+.input-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.answer-input {
+  width: 140px;
+  font-size: var(--font-size-3xl);
+  font-weight: 900;
+  text-align: center;
+  padding: var(--space-2);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  outline: none;
+  min-height: 48px;
+}
+
+.answer-input:focus-visible {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+}
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  max-width: 280px;
+  margin: 0 auto var(--space-6);
+}
+
+.key-btn {
+  height: 48px;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-elevated, #f8fafc);
+  cursor: pointer;
+}
+
+.key-btn:hover {
+  background: #e2e8f0;
+}
+
+.feedback-banner {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+.feedback-banner.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.feedback-banner.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+/* 9x9 Multiplication Table Matrix */
+.table-matrix-wrapper {
+  overflow-x: auto;
+}
+
+.table-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.table-matrix th,
+.table-matrix td {
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-2);
+  min-width: 44px;
+  height: 44px;
+}
+
+.table-matrix th {
+  background: #f1f5f9;
+  font-weight: 800;
+  color: #334155;
+}
+
+.table-matrix td {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  transition: background 0.15s ease;
+}
+
+.table-matrix td:hover {
+  background: #bae6fd;
+  color: #0369a1;
+}
+
+.table-matrix td.selected {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+/* Dialog */
+.dialog-content {
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.dialog-stars {
+  font-size: var(--font-size-3xl);
+  margin: var(--space-4) 0;
+}
+
+@media (pointer: coarse) {
+  .key-btn,
+  .num-pill,
+  .tab-btn,
+  .tool-btn {
+    min-height: 44px;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div class="game-shell">
+    <header class="game-header">
+      <div class="header-left">
+        <a href="../../index.html" class="tool-btn back-hub-link">🏠 回遊戲大廳</a>
+        <h1 class="game-title">✖️ 九九乘法冒險島</h1>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item stat-stars">
+          <span id="stat-total-stars">0 / 30 ⭐️</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="mode-tabs" role="tablist" aria-label="模式切換">
+      <button class="tab-btn active" data-mode="adventure" role="tab">🗺️ 冒險闖關 (10關)</button>
+      <button class="tab-btn" data-mode="sandbox" role="tab">🔍 點陣探索沙盒</button>
+      <button class="tab-btn" data-mode="table" role="tab">📊 九九乘法總表</button>
+    </nav>
+
+    <!-- Panel 1: Adventure Mode -->
+    <main id="panel-adventure" class="screen-panel">
+      <!-- Screen 1.1: Level Selection Map -->
+      <section id="screen-adventure-map">
+        <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">選擇關卡</h2>
+        <p style="color:var(--text-secondary);margin-bottom:16px;">
+          循序漸進打通乘法概念！觀察點陣圖、破除加法迷思，挑戰成為乘法大宗師！
+        </p>
+        <div id="level-grid" class="level-select-grid"></div>
+      </section>
+
+      <!-- Screen 1.2: Question Play Area -->
+      <section id="screen-adventure-play" class="hidden">
+        <div class="quiz-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <button id="btn-back-to-map" class="tool-btn" style="min-height:36px;padding:4px 12px;">← 返回地圖</button>
+            <span id="quiz-level-title" style="font-weight:700;color:var(--text-secondary);"></span>
+          </div>
+
+          <div class="quiz-progress-bar">
+            <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+          </div>
+
+          <div class="quiz-prompt-box">
+            <div id="quiz-prompt-text" class="quiz-prompt"></div>
+            <div id="quiz-hint" class="quiz-hint-text"></div>
+          </div>
+
+          <!-- Dynamic SVG Array Helper -->
+          <div id="quiz-viz-preview" style="margin-bottom:20px;display:flex;justify-content:center;"></div>
+
+          <div class="input-row">
+            <input type="number" id="answer-input" class="answer-input" placeholder="?" aria-label="請輸入答案" />
+            <button id="btn-submit-answer" class="tool-btn primary" style="min-height:48px;padding:0 24px;font-size:1.1rem;">送出答案</button>
+          </div>
+
+          <!-- Virtual Keypad for touch/coarse devices -->
+          <div class="keypad-grid">
+            <button class="key-btn" data-val="1">1</button>
+            <button class="key-btn" data-val="2">2</button>
+            <button class="key-btn" data-val="3">3</button>
+            <button class="key-btn" data-val="4">4</button>
+            <button class="key-btn" data-val="5">5</button>
+            <button class="key-btn" data-val="6">6</button>
+            <button class="key-btn" data-val="7">7</button>
+            <button class="key-btn" data-val="8">8</button>
+            <button class="key-btn" data-val="9">9</button>
+            <button class="key-btn" data-val="clear">C</button>
+            <button class="key-btn" data-val="0">0</button>
+            <button class="key-btn" data-val="backspace">⌫</button>
+          </div>
+
+          <div id="quiz-feedback" class="feedback-banner hidden" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Panel 2: Sandbox Mode -->
+    <section id="panel-sandbox" class="screen-panel hidden">
+      <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">點陣直覺探索沙盒</h2>
+      <p style="color:var(--text-secondary);margin-bottom:16px;">
+        自由點選兩數，觀察點陣方格排列與分組，點擊「旋轉視角」理解乘法交換律！
+      </p>
+
+      <div class="sandbox-controls">
+        <div class="control-group">
+          <span>每組：</span>
+          <div id="selector-a" class="number-selector"></div>
+        </div>
+        <div class="control-group">
+          <span>共有：</span>
+          <div id="selector-b" class="number-selector"></div>
+          <span>組</span>
+        </div>
+        <button id="btn-rotate-grid" class="tool-btn" style="margin-left:auto;">🔄 旋轉視角 (交換律)</button>
+      </div>
+
+      <div class="viz-display">
+        <div id="sandbox-formula" class="formula-card"></div>
+        <div id="sandbox-svg-container" class="array-svg-wrapper"></div>
+      </div>
+    </section>
+
+    <!-- Panel 3: 9x9 Table Mode -->
+    <section id="panel-table" class="screen-panel hidden">
+      <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">九九乘法大表矩陣</h2>
+      <p style="color:var(--text-secondary);margin-bottom:16px;">
+        點擊表格中的任意數字，立即展開對應的連加分解與視覺方格點陣！
+      </p>
+
+      <div class="table-matrix-wrapper">
+        <table id="matrix-table" class="table-matrix"></table>
+      </div>
+
+      <div id="table-detail" style="text-align:center;"></div>
+    </section>
+  </div>
+
+  <!-- Clear Dialog -->
+  <dialog id="level-clear-dialog" class="lab-dialog">
+    <div class="dialog-content">
+      <h3 style="font-size:var(--font-size-2xl);color:var(--text-primary);margin-bottom:8px;">🎉 恭喜通關！</h3>
+      <div id="clear-stars" class="dialog-stars">⭐️⭐️⭐️</div>
+      <p id="clear-message" style="color:var(--text-secondary);margin-bottom:24px;"></p>
+      <button id="btn-next-level" class="tool-btn primary" style="min-height:44px;padding:0 32px;">回到關卡清單</button>
+    </div>
+  </dialog>
+
+  <script>
+'use strict';
+// === Module: ../../shared/audio/soundEngine.js ===
+const __mod_soundEngine = (() => {
+/**
+ * Zero-asset procedural Web Audio sound synthesizer.
+ * Shared across all games in the Learning Games Hub.
+ * Safe no-op in headless Node or when audio is muted/blocked.
+ */
+
+let audioCtx = null;
+let muted = false;
+
+function getCtx() {
+  if (muted || typeof window === 'undefined') return null;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioCtx) {
+    try {
+      audioCtx = new Ctx();
+    } catch {
+      return null;
+    }
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+function setMuted(val) {
+  muted = Boolean(val);
+}
+
+function isMuted() {
+  return muted;
+}
+
+function playTone({ type = 'sine', freq = 440, endFreq = null, duration = 0.12, gain = 0.12, delay = 0 } = {}) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (endFreq !== null) {
+    osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), t0 + duration);
+  }
+  amp.gain.setValueAtTime(0.0001, t0);
+  amp.gain.linearRampToValueAtTime(gain, t0 + 0.012);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(amp);
+  amp.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+}
+
+function playPop() {
+  playTone({ type: 'sine', freq: 520, endFreq: 760, duration: 0.08, gain: 0.1 });
+}
+
+function playDrop() {
+  playTone({ type: 'triangle', freq: 240, endFreq: 140, duration: 0.11, gain: 0.14 });
+}
+
+function playClink() {
+  playTone({ type: 'sine', freq: 880, endFreq: 1120, duration: 0.09, gain: 0.08 });
+}
+
+function playError() {
+  playTone({ type: 'sawtooth', freq: 210, endFreq: 135, duration: 0.22, gain: 0.08 });
+}
+
+function playBalanceLock() {
+  playTone({ type: 'triangle', freq: 523.25, duration: 0.12, gain: 0.11, delay: 0 });
+  playTone({ type: 'triangle', freq: 659.25, duration: 0.12, gain: 0.11, delay: 0.08 });
+  playTone({ type: 'triangle', freq: 783.99, duration: 0.18, gain: 0.12, delay: 0.16 });
+}
+
+function playVictory() {
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((f, idx) => {
+    playTone({ type: 'triangle', freq: f, duration: idx === 3 ? 0.38 : 0.14, gain: 0.12, delay: idx * 0.09 });
+  });
+}
+
+return { setMuted, isMuted, playTone, playPop, playDrop, playClink, playError, playBalanceLock, playVictory };
+})();
+
+// === Module: ../../shared/ui/dialogHelper.js ===
+const __mod_dialogHelper = (() => {
+/**
+ * Accessible native <dialog> helper with progressive top-layer exit animation fallback
+ * and bounding-box light-dismiss fallback (`closedby="any"`).
+ */
+
+let supportsDisplayTransition;
+
+function canTransitionDisplay() {
+  if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+  if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+    return false;
+  }
+  const probe = document.createElement('div');
+  probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+  document.body.appendChild(probe);
+  getComputedStyle(probe).display;
+  probe.style.display = 'none';
+  supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+  probe.remove();
+  return supportsDisplayTransition;
+}
+
+function supportsTopLayerExit() {
+  return Boolean(window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay());
+}
+
+async function closeTopLayer(dialog) {
+  if (!dialog?.open) return;
+  if (!supportsTopLayerExit()) {
+    dialog.setAttribute('data-closing', '');
+    const animations = dialog.getAnimations({ subtree: true });
+    if (animations.length > 0) {
+      await Promise.race([
+        Promise.allSettled(animations.map((a) => a.finished)),
+        new Promise((r) => setTimeout(r, 400)),
+      ]);
+    }
+    if (!dialog.hasAttribute('data-closing')) return;
+    dialog.removeAttribute('data-closing');
+  }
+  dialog.close();
+}
+
+function setupAccessibleDialogs(selector = 'dialog.lab-dialog') {
+  const dialogs = Array.from(document.querySelectorAll(selector));
+
+  // Fallback for closedby="any" where HTMLDialogElement.prototype.closedBy is unsupported
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    const outside = (e, dialog) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    for (const dialog of dialogs) {
+      let pressedOutside = false;
+      dialog.addEventListener('pointerdown', (e) => {
+        pressedOutside = outside(e, dialog);
+      });
+      dialog.addEventListener('pointerup', (e) => {
+        if (pressedOutside && outside(e, dialog)) {
+          closeTopLayer(dialog);
+        }
+      });
+    }
+  }
+
+  for (const dialog of dialogs) {
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeTopLayer(dialog);
+    });
+    dialog.addEventListener('close', () => {
+      dialog.removeAttribute('data-closing');
+      dialog.returnValue = '';
+    });
+  }
+
+  return {
+    dialogs,
+    closeAnimated: closeTopLayer,
+  };
+}
+
+return { canTransitionDisplay, supportsTopLayerExit, closeTopLayer, setupAccessibleDialogs };
+})();
+
+// === Module: ./src/multiplicationCore.js ===
+const __mod_multiplicationCore = (() => {
+/**
+ * Pure Domain Logic for Multiplication Grid & Adventure.
+ * No DOM/window dependencies - runs in Node test runner and browser.
+ */
+
+const CAMPAIGN_LEVELS = [
+  {
+    id: 1,
+    title: '第一關：2 與 5 的倍數探險',
+    desc: '從最規律的 2 和 5 開始，觀察點陣排列！',
+    targetMultiplier: [2, 5],
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 2,
+    title: '第二關：3 與 4 的方格陣列',
+    desc: '每組 3 個或 4 個，數數看一共多少個！',
+    targetMultiplier: [3, 4],
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 3,
+    title: '第三關：乘法交換律大發現',
+    desc: '轉個方向看一看！橫著看與直著看，總數一樣嗎？',
+    targetMultiplier: [2, 3, 4, 5],
+    type: 'commutative',
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 4,
+    title: '第四關：6 與 7 的高山挑戰',
+    desc: '遇到難記的口訣？用相加和點陣來幫忙！',
+    targetMultiplier: [6, 7],
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 5,
+    title: '第五關：8 與 9 的神準射手',
+    desc: '快要背完九九乘法表囉！9 的倍數數字和有神奇的秘密！',
+    targetMultiplier: [8, 9],
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 6,
+    title: '第六關：逆向神探（填入乘數）',
+    desc: '知道答案，那中間是多少呢？如 6 × ( ) = 42',
+    targetMultiplier: [2, 3, 4, 5, 6, 7, 8, 9],
+    type: 'missing_operand',
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 7,
+    title: '第七關：相鄰推導術（+A 或 -A）',
+    desc: '若 7 × 6 = 42，那 7 × 7 就是再多一個 7 嗎？',
+    targetMultiplier: [4, 6, 7, 8, 9],
+    type: 'neighbor_step',
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 8,
+    title: '第八關：生活情境應用題',
+    desc: '一盒布丁有 4 個，買 6 盒共有幾個？',
+    targetMultiplier: [2, 3, 4, 5, 6, 7, 8],
+    type: 'word_problem',
+    count: 5,
+    allowHint: true,
+  },
+  {
+    id: 9,
+    title: '第九關：九九乘法全能大挑戰',
+    desc: '全表隨機出題，考驗你的口訣直覺與速度！',
+    targetMultiplier: [2, 3, 4, 5, 6, 7, 8, 9],
+    type: 'mixed',
+    count: 6,
+    allowHint: false,
+  },
+  {
+    id: 10,
+    title: '第十關：終極乘法大宗師',
+    desc: '混合未知數、文字題與速算，達成 30 星榮耀！',
+    targetMultiplier: [2, 3, 4, 5, 6, 7, 8, 9],
+    type: 'master',
+    count: 6,
+    allowHint: false,
+  },
+];
+
+/**
+ * Story scenarios for word problems
+ */
+const WORD_SCENARIOS = [
+  { item: '盒蘋果', unit: '顆', prefix: '每盒裝有', suffix: '顆蘋果，買了' },
+  { item: '包色鉛筆', unit: '枝', prefix: '每包含有', suffix: '枝色鉛筆，老師發給' },
+  { item: '排座位', unit: '張椅子', prefix: '教室每排有', suffix: '張椅子，共排了' },
+  { item: '籠小籠包', unit: '個', prefix: '一籠裝有', suffix: '個小籠包，餐桌上有' },
+  { item: '束花朵', unit: '朵', prefix: '每束花插有', suffix: '朵向日葵，花店包裝了' },
+  { item: '袋餅乾', unit: '片', prefix: '每袋有', suffix: '片手工餅乾，小明分到' },
+];
+
+/**
+ * Diagnoses common student errors
+ */
+function diagnoseError(question, userAnswer) {
+  const ans = Number(userAnswer);
+  if (Number.isNaN(ans)) {
+    return { type: 'invalid', message: '請輸入有效的阿拉伯數字喔！' };
+  }
+
+  const { a, b, expected, type } = question;
+
+  // 1. 相加混淆 (誤乘為加，如 6 x 3 = 9)
+  if (ans === a + b && type !== 'missing_operand') {
+    return {
+      type: 'added_instead',
+      message: `你把 ${a} 和 ${b} 相加得到 ${ans} 了！乘法是「${b} 個 ${a} 連加」喔！`,
+    };
+  }
+
+  // 2. 逆向填空時誤答為積
+  if (type === 'missing_operand' && ans === a * b) {
+    return {
+      type: 'answered_product',
+      message: `這是問要乘上多少喔！${a} × ( ${b} ) = ${expected}，空格應該填 ${b}！`,
+    };
+  }
+
+  // 3. 鄰近口訣漂移 (差一個 a：例如 7x8=56，誤答 49 或 63)
+  if (type !== 'missing_operand') {
+    if (ans === a * (b - 1)) {
+      return {
+        type: 'drift_minus_one',
+        message: `這是 ${a} × ${b - 1} 的答案！乘上 ${b} 要再加一次 ${a}，答案是 ${expected}。`,
+      };
+    }
+    if (ans === a * (b + 1)) {
+      return {
+        type: 'drift_plus_one',
+        message: `這是 ${a} × ${b + 1} 的答案！多加了一個 ${a} 囉，答案是 ${expected}。`,
+      };
+    }
+  }
+
+  // 4. 口訣顛倒字音相似或相近段落混淆 (常見如 6x9=54 混淆 7x8=56)
+  if (ans === 54 && expected === 56) {
+    return {
+      type: 'clash_54_56',
+      message: '容易混淆喔！七八是「五十六」，六九才是「五十四」！',
+    };
+  }
+  if (ans === 56 && expected === 54) {
+    return {
+      type: 'clash_54_56',
+      message: '注意口訣喔！六九是「五十四」，七八才是「五十六」！',
+    };
+  }
+
+  // 一般提醒
+  return {
+    type: 'generic_error',
+    message: `正確答案是 ${expected}。可以利用點陣圖或連加推導看看喔！`,
+  };
+}
+
+/**
+ * Generate a single question tailored to level specification or random seed
+ */
+function generateQuestion(levelSpec, seedIndex = 0) {
+  const multipliers = levelSpec.targetMultiplier || [2, 3, 4, 5, 6, 7, 8, 9];
+  const a = multipliers[seedIndex % multipliers.length];
+  // b goes from 2 to 9
+  const b = ((seedIndex * 3 + 2) % 8) + 2;
+  const product = a * b;
+  const qType = levelSpec.type || 'standard';
+
+  if (qType === 'commutative') {
+    return {
+      type: 'commutative',
+      a,
+      b,
+      expected: product,
+      prompt: `觀察點陣：${a} × ${b} 與 ${b} × ${a} 的結果都一樣是？`,
+      altPrompt: `${a} × ${b} = ${product}，那麼 ${b} × ${a} = ( ? )`,
+      hint: `${a} 個一組有 ${b} 組，轉個方向變成 ${b} 個一組有 ${a} 組，總數相同！`,
+    };
+  }
+
+  if (qType === 'missing_operand') {
+    // a * (?) = product
+    return {
+      type: 'missing_operand',
+      a,
+      b,
+      expected: b,
+      prompt: `${a} × ( ? ) = ${product}`,
+      hint: `想一想：幾個 ${a} 加起來會是 ${product}？`,
+    };
+  }
+
+  if (qType === 'neighbor_step') {
+    const prevB = b > 2 ? b - 1 : b + 1;
+    const prevProd = a * prevB;
+    const diff = b > prevB ? `+ ${a}` : `- ${a}`;
+    return {
+      type: 'neighbor_step',
+      a,
+      b,
+      expected: product,
+      prompt: `已知 ${a} × ${prevB} = ${prevProd}，請問 ${a} × ${b} = ( ? )`,
+      hint: `${a} 的乘法每多 1 份就多 ${a}，也就是 ${prevProd} ${diff} = ${product}。`,
+    };
+  }
+
+  if (qType === 'word_problem') {
+    const scenario = WORD_SCENARIOS[seedIndex % WORD_SCENARIOS.length];
+    return {
+      type: 'word_problem',
+      a,
+      b,
+      expected: product,
+      prompt: `${scenario.prefix} ${a} ${scenario.unit}，買了 ${b} 個，一共有多少 ${scenario.unit}？`,
+      hint: `列式為：${a} × ${b} = ${product}`,
+    };
+  }
+
+  if (qType === 'mixed' || qType === 'master') {
+    // Cycle between standard, missing_operand, neighbor_step and word_problem
+    const subTypes = ['standard', 'missing_operand', 'neighbor_step', 'word_problem'];
+    const chosen = subTypes[seedIndex % subTypes.length];
+    return generateQuestion({ ...levelSpec, type: chosen }, seedIndex + 1);
+  }
+
+  // Standard direct multiplication
+  return {
+    type: 'standard',
+    a,
+    b,
+    expected: product,
+    prompt: `${a} × ${b} = ( ? )`,
+    hint: `可以想成 ${b} 個 ${a} 連加：` + Array(b).fill(a).join(' + ') + ` = ${product}`,
+  };
+}
+
+/**
+ * Generate full question set for a given campaign level
+ */
+function generateLevelQuestions(levelSpec) {
+  const count = levelSpec.count || 5;
+  const questions = [];
+  for (let i = 0; i < count; i++) {
+    questions.push(generateQuestion(levelSpec, i));
+  }
+  return questions;
+}
+
+/**
+ * Calculate stars earned based on mistakes
+ */
+function calculateStars(totalQuestions, mistakes) {
+  if (totalQuestions <= 0) return 0;
+  if (mistakes === 0) return 3;
+  if (mistakes <= Math.ceil(totalQuestions / 3)) return 2;
+  return 1;
+}
+
+/**
+ * Full 9x9 table generation helper for sandbox
+ */
+function getMultiplicationTable() {
+  const table = [];
+  for (let r = 1; r <= 9; r++) {
+    const row = [];
+    for (let c = 1; c <= 9; c++) {
+      row.push({ a: r, b: c, product: r * c });
+    }
+    table.push(row);
+  }
+  return table;
+}
+
+return { diagnoseError, generateQuestion, generateLevelQuestions, calculateStars, getMultiplicationTable, CAMPAIGN_LEVELS, WORD_SCENARIOS };
+})();
+
+// === Module: ./src/gridVisualizer.js ===
+const __mod_gridVisualizer = (() => {
+/**
+ * Procedural SVG Array / Grid visualizer.
+ * Renders a visual representation of (rows x cols) or dots with groups.
+ */
+
+function renderArraySvg(rows, cols, options = {}) {
+  const {
+    isRotated = false,
+    highlightColor = '#0284c7',
+    dotRadius = 14,
+    gap = 8,
+  } = options;
+
+  const actualRows = isRotated ? cols : rows;
+  const actualCols = isRotated ? rows : cols;
+
+  const cellSize = dotRadius * 2 + gap;
+  const padding = 16;
+  const width = actualCols * cellSize + padding * 2;
+  const height = actualRows * cellSize + padding * 2;
+
+  let dotsMarkup = '';
+
+  for (let r = 0; r < actualRows; r++) {
+    for (let c = 0; c < actualCols; c++) {
+      const cx = padding + c * cellSize + dotRadius;
+      const cy = padding + r * cellSize + dotRadius;
+      const index = r * actualCols + c + 1;
+      const hue = Math.round((r / Math.max(1, actualRows)) * 40 + 195);
+      const fill = `hsl(${hue}, 85%, 55%)`;
+
+      dotsMarkup += `
+        <g class="dot-cell" data-index="${index}">
+          <circle cx="${cx}" cy="${cy}" r="${dotRadius}" fill="${fill}" class="dot-circle" />
+          <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff" pointer-events="none">${index}</text>
+        </g>
+      `;
+    }
+  }
+
+  // Row bracket / labels
+  const labelText = isRotated
+    ? `${actualRows} 行 × ${actualCols} 列（旋轉視角：${actualCols} × ${actualRows}）`
+    : `${rows} 個一組 × ${cols} 組 = ${rows * cols}`;
+
+  return `
+    <svg viewBox="0 0 ${width} ${height}" class="array-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${labelText}">
+      <rect width="${width}" height="${height}" rx="12" fill="var(--bg-canvas-subtle, #f8fafc)" stroke="var(--border-subtle, #e2e8f0)" stroke-width="1.5" />
+      ${dotsMarkup}
+    </svg>
+  `;
+}
+
+return { renderArraySvg };
+})();
+
+// === Module: ./src/gameApp.js ===
+const __mod_gameApp = (() => {
+const { CAMPAIGN_LEVELS, diagnoseError, generateLevelQuestions, calculateStars, getMultiplicationTable } = __mod_multiplicationCore;
+const { renderArraySvg } = __mod_gridVisualizer;
+const { playPop, playDrop, playVictory, playError } = __mod_soundEngine;
+const { setupAccessibleDialogs } = __mod_dialogHelper;
+
+class GameController {
+  constructor() {
+    this.storageKey = 'multiplication_grid_progress_v1';
+    this.savedState = this.loadState();
+
+    // UI state
+    this.currentMode = 'adventure'; // 'adventure' | 'sandbox' | 'table'
+    this.sandboxA = 3;
+    this.sandboxB = 4;
+    this.sandboxRotated = false;
+
+    // Adventure state
+    this.activeLevel = null;
+    this.questions = [];
+    this.qIndex = 0;
+    this.mistakes = 0;
+    this.isAnswerChecked = false;
+  }
+
+  loadState() {
+    try {
+      const data = localStorage.getItem(this.storageKey);
+      return data ? JSON.parse(data) : { stars: {}, totalStars: 0 };
+    } catch {
+      return { stars: {}, totalStars: 0 };
+    }
+  }
+
+  saveState() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.savedState));
+    } catch (e) {
+      console.warn('Storage save error', e);
+    }
+  }
+
+  init() {
+    this.bindDom();
+    this.renderHeaderStats();
+    this.renderAdventureMap();
+    this.renderSandbox();
+    this.renderTable();
+    this.switchMode('adventure');
+    setupAccessibleDialogs();
+
+    // User gesture audio unlock
+    document.addEventListener('pointerdown', () => playPop(), { once: true });
+  }
+
+  bindDom() {
+    // Mode tabs
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        playPop();
+        this.switchMode(e.currentTarget.dataset.mode);
+      });
+    });
+
+    // Sandbox rotate
+    document.getElementById('btn-rotate-grid')?.addEventListener('click', () => {
+      playDrop();
+      this.sandboxRotated = !this.sandboxRotated;
+      this.renderSandbox();
+    });
+
+    // Submit Answer & Enter key
+    document.getElementById('btn-submit-answer')?.addEventListener('click', () => {
+      this.handleAnswerSubmit();
+    });
+
+    const input = document.getElementById('answer-input');
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.handleAnswerSubmit();
+      }
+    });
+
+    // Virtual keypad
+    document.querySelectorAll('.key-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        playDrop();
+        const val = e.currentTarget.dataset.val;
+        const inp = document.getElementById('answer-input');
+        if (!inp) return;
+        if (val === 'backspace') {
+          inp.value = inp.value.slice(0, -1);
+        } else if (val === 'clear') {
+          inp.value = '';
+        } else {
+          inp.value += val;
+        }
+      });
+    });
+
+    // Back to map button
+    document.getElementById('btn-back-to-map')?.addEventListener('click', () => {
+      playPop();
+      this.showScreen('adventure-map');
+    });
+
+    // Dialog continue button
+    document.getElementById('btn-next-level')?.addEventListener('click', () => {
+      const dlg = document.getElementById('level-clear-dialog');
+      if (dlg?.close) dlg.close();
+      this.showScreen('adventure-map');
+      this.renderAdventureMap();
+      this.renderHeaderStats();
+    });
+  }
+
+  switchMode(mode) {
+    this.currentMode = mode;
+    document.querySelectorAll('.tab-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+
+    document.getElementById('panel-adventure')?.classList.toggle('hidden', mode !== 'adventure');
+    document.getElementById('panel-sandbox')?.classList.toggle('hidden', mode !== 'sandbox');
+    document.getElementById('panel-table')?.classList.toggle('hidden', mode !== 'table');
+
+    if (mode === 'adventure') {
+      this.showScreen('adventure-map');
+    }
+  }
+
+  showScreen(screenId) {
+    document.getElementById('screen-adventure-map')?.classList.toggle('hidden', screenId !== 'adventure-map');
+    document.getElementById('screen-adventure-play')?.classList.toggle('hidden', screenId !== 'adventure-play');
+  }
+
+  renderHeaderStats() {
+    let total = 0;
+    Object.values(this.savedState.stars || {}).forEach((s) => (total += s));
+    const el = document.getElementById('stat-total-stars');
+    if (el) el.textContent = `${total} / 30 ⭐️`;
+  }
+
+  /* ----------------- ADVENTURE MODE ----------------- */
+
+  renderAdventureMap() {
+    const grid = document.getElementById('level-grid');
+    if (!grid) return;
+
+    grid.innerHTML = CAMPAIGN_LEVELS.map((lvl) => {
+      const earned = this.savedState.stars[lvl.id] || 0;
+      const starsStr = earned > 0 ? '⭐️'.repeat(earned) : '☆☆☆';
+      return `
+        <div class="level-card" data-level="${lvl.id}" role="button" tabindex="0">
+          <div class="level-card-header">
+            <span class="level-number">第 ${lvl.id} 關</span>
+            <span class="level-stars">${starsStr}</span>
+          </div>
+          <div class="level-name" style="font-weight:700;margin-bottom:4px;">${lvl.title.split('：')[1]}</div>
+          <div class="level-desc">${lvl.desc}</div>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.level-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        playPop();
+        const lvlId = Number(e.currentTarget.dataset.level);
+        this.startLevel(lvlId);
+      });
+    });
+  }
+
+  startLevel(lvlId) {
+    const lvl = CAMPAIGN_LEVELS.find((l) => l.id === lvlId);
+    if (!lvl) return;
+
+    this.activeLevel = lvl;
+    this.questions = generateLevelQuestions(lvl);
+    this.qIndex = 0;
+    this.mistakes = 0;
+    this.isAnswerChecked = false;
+
+    this.showScreen('adventure-play');
+    this.renderQuestion();
+  }
+
+  renderQuestion() {
+    this.isAnswerChecked = false;
+    const q = this.questions[this.qIndex];
+    const total = this.questions.length;
+
+    // Progress bar
+    const fill = document.getElementById('quiz-progress-fill');
+    if (fill) fill.style.width = `${((this.qIndex) / total) * 100}%`;
+
+    const titleEl = document.getElementById('quiz-level-title');
+    if (titleEl) titleEl.textContent = `${this.activeLevel.title}（第 ${this.qIndex + 1} / ${total} 題）`;
+
+    const promptEl = document.getElementById('quiz-prompt-text');
+    if (promptEl) promptEl.textContent = q.prompt;
+
+    const hintEl = document.getElementById('quiz-hint');
+    if (hintEl) hintEl.textContent = q.hint || '';
+
+    // Render array helper
+    const vizContainer = document.getElementById('quiz-viz-preview');
+    if (vizContainer) {
+      vizContainer.innerHTML = renderArraySvg(q.a, q.b, { dotRadius: 10, gap: 4 });
+    }
+
+    const input = document.getElementById('answer-input');
+    if (input) {
+      input.value = '';
+      input.disabled = false;
+      input.focus();
+    }
+
+    const feedback = document.getElementById('quiz-feedback');
+    if (feedback) {
+      feedback.className = 'feedback-banner hidden';
+      feedback.textContent = '';
+    }
+
+    const submitBtn = document.getElementById('btn-submit-answer');
+    if (submitBtn) submitBtn.textContent = '送出答案';
+  }
+
+  handleAnswerSubmit() {
+    if (this.isAnswerChecked) {
+      // Proceed to next question
+      this.qIndex++;
+      if (this.qIndex >= this.questions.length) {
+        this.finishLevel();
+      } else {
+        playPop();
+        this.renderQuestion();
+      }
+      return;
+    }
+
+    const input = document.getElementById('answer-input');
+    const feedback = document.getElementById('quiz-feedback');
+    const submitBtn = document.getElementById('btn-submit-answer');
+    const q = this.questions[this.qIndex];
+
+    const val = input.value.trim();
+    if (!val) return;
+
+    const num = Number(val);
+    if (num === q.expected) {
+      // Correct!
+      playVictory();
+      this.isAnswerChecked = true;
+      input.disabled = true;
+      feedback.className = 'feedback-banner success';
+      feedback.textContent = `🎉 太棒了！答對了！${q.a} × ${q.b} = ${q.a * q.b}`;
+      submitBtn.textContent = '下一題 →';
+    } else {
+      // Incorrect!
+      playError();
+      this.mistakes++;
+      const diag = diagnoseError(q, val);
+      feedback.className = 'feedback-banner error';
+      feedback.textContent = `💡 ${diag.message}`;
+    }
+  }
+
+  finishLevel() {
+    const stars = calculateStars(this.questions.length, this.mistakes);
+    const prevStars = this.savedState.stars[this.activeLevel.id] || 0;
+    if (stars > prevStars) {
+      this.savedState.stars[this.activeLevel.id] = stars;
+      this.saveState();
+    }
+
+    playVictory();
+    const dlg = document.getElementById('level-clear-dialog');
+    const starsEl = document.getElementById('clear-stars');
+    const msgEl = document.getElementById('clear-message');
+
+    if (starsEl) starsEl.textContent = '⭐️'.repeat(stars) + '☆'.repeat(3 - stars);
+    if (msgEl) {
+      msgEl.textContent = `你完成了${this.activeLevel.title}！答錯次數：${this.mistakes} 次。`;
+    }
+
+    if (dlg?.showModal) dlg.showModal();
+  }
+
+  /* ----------------- SANDBOX EXPLORER ----------------- */
+
+  renderSandbox() {
+    // Generate A and B selector pills
+    const selA = document.getElementById('selector-a');
+    const selB = document.getElementById('selector-b');
+
+    if (selA && selA.children.length === 0) {
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = `num-pill ${i === this.sandboxA ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.addEventListener('click', () => {
+          playPop();
+          this.sandboxA = i;
+          this.renderSandbox();
+        });
+        selA.appendChild(btn);
+      }
+    } else if (selA) {
+      selA.querySelectorAll('.num-pill').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === this.sandboxA);
+      });
+    }
+
+    if (selB && selB.children.length === 0) {
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = `num-pill ${i === this.sandboxB ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.addEventListener('click', () => {
+          playPop();
+          this.sandboxB = i;
+          this.renderSandbox();
+        });
+        selB.appendChild(btn);
+      }
+    } else if (selB) {
+      selB.querySelectorAll('.num-pill').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === this.sandboxB);
+      });
+    }
+
+    // Render SVG
+    const container = document.getElementById('sandbox-svg-container');
+    if (container) {
+      container.innerHTML = renderArraySvg(this.sandboxA, this.sandboxB, {
+        isRotated: this.sandboxRotated,
+        dotRadius: 13,
+      });
+    }
+
+    // Formula card
+    const formula = document.getElementById('sandbox-formula');
+    if (formula) {
+      const prod = this.sandboxA * this.sandboxB;
+      if (this.sandboxRotated) {
+        formula.innerHTML = `${this.sandboxB} × ${this.sandboxA} = <strong>${prod}</strong>（旋轉視角交換律）`;
+      } else {
+        formula.innerHTML = `${this.sandboxA} × ${this.sandboxB} = <strong>${prod}</strong>`;
+      }
+    }
+  }
+
+  /* ----------------- 9x9 TABLE MATRIX ----------------- */
+
+  renderTable() {
+    const tableEl = document.getElementById('matrix-table');
+    if (!tableEl) return;
+
+    const data = getMultiplicationTable();
+    let html = '<thead><tr><th>×</th>';
+    for (let c = 1; c <= 9; c++) html += `<th>${c}</th>`;
+    html += '</tr></thead><tbody>';
+
+    for (let r = 0; r < 9; r++) {
+      html += `<tr><th>${r + 1}</th>`;
+      for (let c = 0; c < 9; c++) {
+        const item = data[r][c];
+        html += `<td data-a="${item.a}" data-b="${item.b}">${item.product}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    tableEl.innerHTML = html;
+
+    tableEl.querySelectorAll('td').forEach((td) => {
+      td.addEventListener('click', (e) => {
+        playPop();
+        tableEl.querySelectorAll('td').forEach((el) => el.classList.remove('selected'));
+        e.currentTarget.classList.add('selected');
+        const a = Number(e.currentTarget.dataset.a);
+        const b = Number(e.currentTarget.dataset.b);
+
+        const detail = document.getElementById('table-detail');
+        if (detail) {
+          detail.innerHTML = `
+            <div style="margin-top:12px;font-size:1.1rem;font-weight:700;color:#0284c7;">
+              ${a} × ${b} = ${a * b}（${b} 個 ${a} 連加：${Array(b).fill(a).join(' + ')}）
+            </div>
+            <div style="margin-top:8px;">
+              ${renderArraySvg(a, b, { dotRadius: 8, gap: 3 })}
+            </div>
+          `;
+        }
+      });
+    });
+  }
+}
+
+return { GameController };
+})();
+
+// === Module: ./src/main.js ===
+(() => {
+const { GameController } = __mod_gameApp;
+
+function bootstrap() {
+  const controller = new GameController();
+  controller.init();
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
+}
+
+})();
+</script>
+</body>
+</html>

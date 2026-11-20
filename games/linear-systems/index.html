@@ -1,0 +1,5433 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>雙天平偵探｜二元一次聯立方程式列式實驗室</title>
+  <style>
+/* === Style: ../../shared/styles/tokens.css === */
+:root {
+  --bg-canvas: #faf6ee;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --ink-primary: #1e293b;
+  --ink-secondary: #475569;
+  --border-soft: #cbd5e1;
+
+  --x-color: #1d4ed8;
+  --x-bg: #dbeafe;
+  --y-color: #b45309;
+  --y-bg: #fef3c7;
+
+  --clue1-color: #4338ca;
+  --clue1-bg: #e0e7ff;
+  --clue2-color: #047857;
+  --clue2-bg: #d1fae5;
+
+  --ok-color: #15803d;
+  --ok-bg: #dcfce7;
+  --err-color: #b91c1c;
+  --err-bg: #fee2e2;
+
+  --target-size: 24px;
+  --radius-lg: 16px;
+  --radius-md: 11px;
+  --shadow-card: 0 4px 14px rgb(15 23 42 / 0.06);
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+  margin-top: 0;
+}
+
+p, li {
+  text-wrap: pretty;
+}
+
+:where(a, code) {
+  overflow-wrap: anywhere;
+}
+
+img, svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+/* Visually hidden utility (accessible to screen readers; reveals on focus) */
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1000;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Minimum touch/click target sizing & natural interaction feedback */
+:where(button, select, textarea, input:not([type="checkbox"], [type="radio"]), [role="button"], nav a, .back-hub-link, label:has(input[type="checkbox"], input[type="radio"])) {
+  min-block-size: var(--target-size);
+  min-inline-size: var(--target-size);
+}
+
+:where(button) {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 150ms ease-out, scale 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+button:active:not(:disabled) {
+  scale: 0.97;
+}
+
+button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #1e293b;
+  outline-offset: 3px;
+}
+
+/* Shared Header, Main & Footer */
+.app-header {
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 0.75rem max(1rem, env(safe-area-inset-right, 0px)) 0.75rem max(1rem, env(safe-area-inset-left, 0px));
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+.header-inner {
+  max-width: 1240px;
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: clamp(1.02rem, 1.5vw, 1.25rem);
+  font-weight: 800;
+  margin: 0;
+  color: var(--ink-primary);
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.primary-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.nav-pill, .tool-btn, .pill-btn {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.back-hub-link:hover {
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.14);
+}
+
+.nav-pill.is-active, .pill-btn.is-active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stars-counter {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 2rem max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+  padding: 0.9rem 1rem max(0.9rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+/* Native <dialog> styling & Top-Layer Animations */
+dialog.lab-dialog {
+  width: min(92vw, 820px);
+  max-height: 86dvh;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  background: #ffffff;
+  color: var(--ink-primary);
+  box-shadow: 0 24px 48px rgb(15 23 42 / 0.25);
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.lab-dialog {
+    transform: scale(0.94);
+  }
+}
+
+dialog.lab-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.lab-dialog::backdrop {
+  background-color: rgba(15, 23, 42, 0);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  transition-property: background-color, display, overlay;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+    transform: scale(1);
+  }
+  @starting-style {
+    :is(dialog.lab-dialog[open]):where(:not([data-closing])) {
+      transform: scale(0.94);
+    }
+  }
+}
+
+:is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+  background-color: rgba(15, 23, 42, 0.48);
+}
+
+@starting-style {
+  :is(dialog.lab-dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(15, 23, 42, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.lab-dialog,
+  dialog.lab-dialog::backdrop {
+    transition-duration: 0.1s;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.dialog-close-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-weight: 800;
+}
+
+.dialog-body {
+  padding: 1rem 1.2rem;
+  overflow-y: auto;
+}
+
+
+/* === Style: ./src/styles/game.css === */
+/* Game-specific styles for 雙天平偵探 (shared tokens & dialog rules live in shared/styles/tokens.css) */
+
+/* Top level & stepper bar */
+.level-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.level-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.world-pill {
+  background: var(--world-color, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+
+.badge-pill {
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.challenge-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.32rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.step-pill.is-current {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #1e40af;
+}
+
+.step-pill.is-done {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: currentColor;
+  color: #ffffff;
+  font-size: 0.75rem;
+}
+
+.step-pill.is-current .step-num,
+.step-pill.is-done .step-num {
+  color: #ffffff;
+}
+
+/* Story card */
+.story-card {
+  background: var(--bg-card);
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 1rem;
+}
+
+.story-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.story-card-header h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.var-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.var-legend-pending {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.var-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.var-x {
+  background: var(--x-bg);
+  color: var(--x-color);
+  border: 1.5px solid #93c5fd;
+}
+
+.var-y {
+  background: var(--y-bg);
+  color: var(--y-color);
+  border: 1.5px solid #fcd34d;
+}
+
+.mini-swap-btn {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.story-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.story-seg {
+  padding: 0.08rem 0.22rem;
+  border-radius: 6px;
+  transition: background-color 200ms ease-out;
+}
+
+.story-hl-question {
+  background: #fef9c3;
+  border-bottom: 2px dashed #eab308;
+}
+
+.story-hl-clue1 {
+  background: var(--clue1-bg);
+  color: #312e81;
+  font-weight: 700;
+}
+
+.story-hl-clue2 {
+  background: var(--clue2-bg);
+  color: #064e3b;
+  font-weight: 700;
+}
+
+/* Step Panels */
+.step-panel {
+  background: var(--bg-card);
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.step-header h3,
+.step-header-compact h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.step-header-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.muted-note {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.92rem;
+}
+
+/* Step 1 Mystery Boxes */
+.mystery-boxes-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0;
+}
+
+.mystery-slot, .clue-slot {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 2.5px dashed #94a3b8;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.mystery-slot.is-targeted, .clue-slot.is-targeted {
+  border-style: solid;
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.mystery-slot.slot-y.is-targeted {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.mystery-slot.is-drag-over, .clue-slot.is-drag-over, .pan-box.is-drag-over {
+  transform: scale(1.02);
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.slot-select-btn {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  text-align: left;
+  color: var(--ink-primary);
+}
+
+.slot-select-btn:hover {
+  box-shadow: none;
+}
+
+.slot-tag {
+  display: inline-block;
+  padding: 0.16rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.clue-1-tag {
+  background: var(--clue1-bg);
+  color: var(--clue1-color);
+}
+
+.clue-2-tag {
+  background: var(--clue2-bg);
+  color: var(--clue2-color);
+}
+
+.slot-filled-val, .clue-filled-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.slot-empty-hint {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.slot-clear-btn {
+  align-self: center;
+  margin-right: 0.6rem;
+  background: #e2e8f0;
+  color: #334155;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-weight: 800;
+}
+
+.chip-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.9rem 0;
+}
+
+.word-chip, .clue-sentence-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #ffffff;
+  border: 2px solid #94a3b8;
+  border-radius: 12px;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.word-chip:hover:not(:disabled),
+.clue-sentence-btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.mini-tag {
+  font-size: 0.76rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+/* Step 2 Clue Slots */
+.clue-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0;
+}
+
+.clue-slot-1.is-targeted {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.clue-slot-2.is-targeted {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.clue-candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.9rem 0;
+}
+
+.clue-sentence-btn {
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+/* Step 3 Magnet Dock & Scales */
+.magnet-dock {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.magnet-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dock-label {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.magnet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ffffff;
+  border: 2px solid #94a3b8;
+  border-radius: 10px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.95rem;
+  color: var(--ink-primary);
+}
+
+.magnet-chip.is-selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  color: #312e81;
+}
+
+.magnet-note {
+  font-size: 0.76rem;
+  color: var(--ink-secondary);
+}
+
+.magnet-action-strip {
+  margin-top: 0.65rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed #cbd5e1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.strip-title {
+  font-size: 0.86rem;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mini-target-btn {
+  background: #ffffff;
+  border: 1.5px solid #94a3b8;
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mini-target-btn.is-active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.strip-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.apply-btn, .token-add-btn {
+  background: #ffffff;
+  border: 1.5px solid #64748b;
+  border-radius: 8px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+
+.apply-btn.is-neg, .token-add-btn.is-neg {
+  border-style: dashed;
+  background: #fff1f2;
+  color: #9f1239;
+  border-color: #fb7185;
+}
+
+.var-x-btn {
+  background: var(--x-bg);
+  color: var(--x-color);
+  border-color: #60a5fa;
+}
+
+.var-y-btn {
+  background: var(--y-bg);
+  color: var(--y-color);
+  border-color: #fbbf24;
+}
+
+/* Container Query for Twin Scales */
+.workbench-container {
+  container: workbench / inline-size;
+  margin-top: 0.85rem;
+}
+
+.twin-scales-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@container workbench (inline-size > 56rem) {
+  .twin-scales-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.scale-workbench-card, .scale-card {
+  background: #fcfcfd;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.clue-1-card {
+  border-color: #818cf8;
+}
+
+.clue-2-card {
+  border-color: #34d399;
+}
+
+.clue-banner-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.scale-mini-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tiny-tool-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.tiny-tool-btn.is-on {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #312e81;
+}
+
+.clue-quote {
+  margin: 0.3rem 0 0;
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+.expansion-callout {
+  margin-top: 0.4rem;
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.84rem;
+  color: #713f12;
+}
+
+.scale-svg {
+  width: 100%;
+  max-height: 205px;
+  display: block;
+}
+
+.scale-svg * {
+  transition: transform 280ms ease-out;
+  transition: transform 280ms linear(0, 0.45 15%, 1.08 35%, 0.97 55%, 1.01 75%, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scale-svg * {
+    transition: none;
+  }
+}
+
+.live-equation-bar {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.eq-tok-x { color: var(--x-color); }
+.eq-tok-y { color: var(--y-color); }
+.eq-tok-c { color: #334155; }
+.eq-eq { color: #64748b; margin-inline: 0.25rem; }
+
+.pan-selector-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+@media (max-width: 520px) {
+  .pan-selector-row {
+    grid-template-columns: 1fr;
+  }
+  .pan-equals-divider {
+    text-align: center;
+  }
+}
+
+.pan-equals-divider {
+  align-self: center;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.pan-box {
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pan-box.is-active {
+  border-color: #2563eb;
+  background: #f8faff;
+}
+
+.pan-select-header {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+  text-align: center;
+  width: 100%;
+}
+
+.pan-box.is-active .pan-select-header {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.pan-terms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 36px;
+}
+
+.pan-empty-label {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  padding: 0.35rem 0;
+}
+
+.term-pill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.term-pill.pill-x { background: var(--x-bg); border-color: #93c5fd; color: var(--x-color); }
+.term-pill.pill-y { background: var(--y-bg); border-color: #fcd34d; color: var(--y-color); }
+.term-pill.pill-c { background: #f1f5f9; border-color: #94a3b8; color: #334155; }
+.term-pill.is-negative { border-style: dashed; }
+
+.term-controls {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.term-ctrl-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ink-primary);
+}
+
+.term-ctrl-btn.is-del {
+  color: #b91c1c;
+}
+
+.quick-add-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.custom-num-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.custom-num-input {
+  width: 84px;
+  padding: 0.26rem 0.4rem;
+  border: 1.5px solid #94a3b8;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+/* Feedback & Hints */
+.hints-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.hint-item {
+  background: #fefce8;
+  border: 1.5px solid #fde047;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+  color: #713f12;
+}
+
+.feedback-box {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 0.8rem 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.feedback-box.is-ok {
+  background: var(--ok-bg);
+  color: var(--ok-color);
+  border: 1.5px solid #86efac;
+}
+
+.feedback-box.is-err {
+  background: var(--err-bg);
+  color: var(--err-color);
+  border: 1.5px solid #fca5a5;
+}
+
+.diag-line {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+}
+
+/* Action Buttons */
+.step-actions, .step3-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1.5px solid #e2e8f0;
+}
+
+.primary-btn, .check-balance-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 0.7rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.check-balance-btn {
+  background: #4f46e5;
+}
+
+.secondary-btn {
+  background: #f1f5f9;
+  color: var(--ink-primary);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hint-btn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #f59e0b;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+/* Step 4 & Sandbox */
+.victory-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #ecfdf5, #eff6ff);
+  border: 2px solid #34d399;
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.stars-badge {
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.system-summary-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.curly-brace {
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1;
+  color: #4f46e5;
+}
+
+.system-lines {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sys-line {
+  font-size: 1.05rem;
+}
+
+.canon-note {
+  font-size: 0.84rem;
+  color: var(--ink-secondary);
+}
+
+.solution-answer-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.step4-visual-grid, .sandbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 0.9rem 0;
+}
+
+.step4-graph-card, .step4-sliders-card, .sandbox-graph-col {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.slider-group input[type="range"] {
+  width: 100%;
+  accent-color: #2563eb;
+}
+
+.mini-scales-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.s4-status-line {
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 0.55rem;
+}
+
+.s4-status-line.is-ok { background: var(--ok-bg); color: var(--ok-color); }
+.s4-status-line.is-err { background: var(--err-bg); color: var(--err-color); }
+
+.solving-recap {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-top: 0.85rem;
+}
+
+.solving-recap summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.recap-steps {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+}
+
+/* Sandbox specifics */
+.sandbox-panel {
+  background: var(--bg-card);
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.panel-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.preset-switcher, .quick-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sandbox-controls-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+}
+
+.chip-btn {
+  background: #ffffff;
+  border: 1.5px solid #94a3b8;
+  border-radius: 8px;
+  padding: 0.25rem 0.55rem;
+  font-weight: 700;
+}
+
+.chip-btn.is-selected {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+.toggle-scale2-btn {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  color: #92400e;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  font-weight: 800;
+}
+
+.toggle-scale2-btn.is-on {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.insight-banner {
+  margin: 0.85rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #eef2ff;
+  border: 1.5px solid #818cf8;
+  color: #312e81;
+  font-weight: 700;
+}
+
+.insight-banner.is-success {
+  background: var(--ok-bg);
+  border-color: #34d399;
+  color: var(--ok-color);
+}
+
+.sandbox-scales-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.scale-card-title {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.eval-readout {
+  text-align: center;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.scale-card.is-dimmed {
+  opacity: 0.72;
+}
+
+.scale-locked-placeholder {
+  padding: 2.2rem 1rem;
+  text-align: center;
+  border: 2px dashed #94a3b8;
+  border-radius: 10px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* Level Map & Help Body */
+.map-world-section {
+  margin-bottom: 1.15rem;
+}
+
+.map-world-title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.6rem;
+  border-left: 4px solid var(--world-color, #4f46e5);
+}
+
+.map-world-title small {
+  color: var(--ink-secondary);
+  font-weight: 500;
+  margin-left: 0.35rem;
+}
+
+.map-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.6rem;
+}
+
+.map-level-card {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--ink-primary);
+}
+
+.map-level-card.is-current {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.map-level-card.is-solved {
+  border-color: #10b981;
+}
+
+.map-lvl-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.map-lvl-title {
+  font-weight: 800;
+  font-size: 0.96rem;
+}
+
+.map-lvl-badge {
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+</style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link visually-hidden">跳至主要學習區</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-cluster">
+        <span class="brand-icon" aria-hidden="true">⚖️</span>
+        <div>
+          <h1 class="brand-title">雙天平偵探：二元一次聯立方程式列式實驗室</h1>
+          <p class="brand-subtitle">從文字題「設 x, y → 抓雙線索 → 天平列式 → 交點驗算」一次打通</p>
+        </div>
+      </div>
+
+      <nav class="primary-nav" aria-label="主要模式切換">
+        <button id="nav-campaign" type="button" class="nav-pill is-active">🗺️ 闖關實驗室</button>
+        <button id="nav-sandbox" type="button" class="nav-pill">🔬 為什麼要兩條式子？</button>
+        <button id="nav-practice" type="button" class="nav-pill">🎲 無限隨機練習</button>
+      </nav>
+
+      <div class="header-tools">
+        <a href="../../index.html" class="tool-btn back-hub-link">🏠 回遊戲大廳</a>
+        <span id="hud-total-stars" class="stars-counter" aria-label="累積星星數">⭐ 0 / 36</span>
+        <button id="btn-open-map" type="button" class="tool-btn">🗺️ 第 1 關：珍奶與雞排</button>
+        <button id="btn-open-help" type="button" class="tool-btn" aria-label="開啟操作教學說明">❓ 玩法</button>
+        <button id="btn-toggle-sound" type="button" class="tool-btn" aria-pressed="true">🔊 音效</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="app-main">
+    <div id="game-root" class="game-root"></div>
+  </main>
+
+  <footer class="app-footer">
+    <p>雙天平偵探（國中 108 課綱二元一次聯立方程式應用問題視覺化工具）・離線單檔免伺服器運作</p>
+  </footer>
+
+  <!-- Centralized polite live region outside dialogs -->
+  <div id="sr-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Native Modal Dialog: Level Map -->
+  <dialog id="level-map-dialog" class="lab-dialog" closedby="any" aria-labelledby="level-map-title">
+    <div class="dialog-header">
+      <h2 id="level-map-title">🗺️ 偵探關卡地圖（4 大主題・12 關）</h2>
+      <form method="dialog">
+        <button type="submit" value="close" class="dialog-close-btn" autofocus aria-label="關閉關卡地圖">✕</button>
+      </form>
+    </div>
+    <div id="level-map-body" class="dialog-body"></div>
+  </dialog>
+
+  <!-- Native Modal Dialog: Help Guide -->
+  <dialog id="help-dialog" class="lab-dialog" closedby="any" aria-labelledby="help-title">
+    <div class="dialog-header">
+      <h2 id="help-title">❓ 怎麼把文字題變成兩條方程式？</h2>
+      <form method="dialog">
+        <button type="submit" value="close" class="dialog-close-btn" autofocus aria-label="關閉說明">✕</button>
+      </form>
+    </div>
+    <div class="dialog-body help-body">
+      <ol class="help-list">
+        <li><strong>第 1 步（設未知數）：</strong>看清楚最後在問哪兩個未知量，放進 <span class="var-badge var-x">x</span> 與 <span class="var-badge var-y">y</span>！注意：兩者誰設為 x、誰設為 y 都可以，系統會全程自動跟著你判斷！</li>
+        <li><strong>第 2 步（抓雙線索）：</strong>兩個未知數一定要找「兩句不同的條件」才能鎖定唯一答案；問句本身不是條件式喔。</li>
+        <li><strong>第 3 步（雙天平列式）：</strong>用兩座天平對應兩句話！點選左盤或右盤，放進 x、y 與題目數字磁鐵。「多／加」可以用正砝碼，「少／減」可以用負氣球，甚至左盤寫 <code>x = y + 8</code> 或 <code>x − y = 8</code> 系統都算對！</li>
+        <li><strong>第 4 步（交點驗算）：</strong>兩條式子各代表座標平面上的一條直線，兩條線唯一的交點就是答案！如果兩座天平不小心列成同一句話（重合直線），就會解不出唯一答案喔。</li>
+      </ol>
+    </div>
+  </dialog>
+
+  <script>
+'use strict';
+// === Module: ./src/math/equationEngine.js ===
+const __mod_equationEngine = (() => {
+/**
+ * Pure algebraic equation engine for 2-variable linear systems.
+ * Zero DOM dependencies so it runs identically in browser ESM and Node 24 headless tests.
+ */
+
+const EPS = 1e-6;
+
+/**
+ * Round a floating point value cleanly to 4 decimal places to avoid IEEE-754 drift
+ * (e.g. 0.8 + 0.1 = 0.9000000000000001).
+ * @param {number} n
+ * @returns {number}
+ */
+function roundClean(n) {
+  if (!Number.isFinite(n)) return 0;
+  const rounded = Math.round(n * 10000) / 10000;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+/**
+ * Format coefficient cleanly (integers without decimals, decimals without trailing zeros).
+ * @param {number} n
+ * @returns {string}
+ */
+function formatCoeff(n) {
+  const clean = roundClean(n);
+  if (Math.abs(clean) < EPS) return '0';
+  if (Number.isInteger(clean)) return String(clean);
+  return String(Number(clean.toFixed(4)));
+}
+
+/**
+ * Create an empty scale state `{ left: { x, y, c }, right: { x, y, c } }`.
+ */
+function createEmptyScale() {
+  return {
+    left: { x: 0, y: 0, c: 0 },
+    right: { x: 0, y: 0, c: 0 },
+  };
+}
+
+/**
+ * Clone a scale deeply.
+ * @param {{ left: {x:number,y:number,c:number}, right: {x:number,y:number,c:number} }} scale
+ */
+function cloneScale(scale) {
+  return {
+    left: { x: roundClean(scale.left.x), y: roundClean(scale.left.y), c: roundClean(scale.left.c) },
+    right: { x: roundClean(scale.right.x), y: roundClean(scale.right.y), c: roundClean(scale.right.c) },
+  };
+}
+
+/**
+ * Normalize a scale's pan values into canonical equation `a*U0 + b*U1 = c`.
+ * When `swapped === false`, student `x` is `U0` and `y` is `U1`.
+ * When `swapped === true`, student `x` is `U1` and `y` is `U0`.
+ * @param {{ left: {x:number,y:number,c:number}, right: {x:number,y:number,c:number} }} scale
+ * @param {boolean} [swapped=false]
+ * @returns {{ a: number, b: number, c: number }}
+ */
+function normalizeScale(scale, swapped = false) {
+  const coeffX = roundClean((scale?.left?.x ?? 0) - (scale?.right?.x ?? 0));
+  const coeffY = roundClean((scale?.left?.y ?? 0) - (scale?.right?.y ?? 0));
+  const rhs = roundClean((scale?.right?.c ?? 0) - (scale?.left?.c ?? 0));
+  if (swapped) {
+    return { a: coeffY, b: coeffX, c: rhs };
+  }
+  return { a: coeffX, b: coeffY, c: rhs };
+}
+
+/**
+ * Solve a 2x2 linear system:
+ *   eq1.a * u0 + eq1.b * u1 = eq1.c
+ *   eq2.a * u0 + eq2.b * u1 = eq2.c
+ * @param {{ a: number, b: number, c: number }} eq1
+ * @param {{ a: number, b: number, c: number }} eq2
+ * @returns {{ status: 'unique' | 'parallel' | 'coincident' | 'degenerate', x: number | null, y: number | null, det: number }}
+ */
+function solveSystem2x2(eq1, eq2) {
+  const norm1 = Math.abs(eq1.a) + Math.abs(eq1.b);
+  const norm2 = Math.abs(eq2.a) + Math.abs(eq2.b);
+  if (norm1 < EPS || norm2 < EPS) {
+    return { status: 'degenerate', x: null, y: null, det: 0 };
+  }
+
+  const det = roundClean(eq1.a * eq2.b - eq2.a * eq1.b);
+  if (Math.abs(det) > EPS) {
+    const x = roundClean((eq1.c * eq2.b - eq2.c * eq1.b) / det);
+    const y = roundClean((eq1.a * eq2.c - eq2.a * eq1.c) / det);
+    return { status: 'unique', x, y, det };
+  }
+
+  const crossAC = Math.abs(eq1.a * eq2.c - eq2.a * eq1.c);
+  const crossBC = Math.abs(eq1.b * eq2.c - eq2.b * eq1.c);
+  if (crossAC < EPS && crossBC < EPS) {
+    return { status: 'coincident', x: null, y: null, det: 0 };
+  }
+  return { status: 'parallel', x: null, y: null, det: 0 };
+}
+
+/**
+ * Check if two linear equations `{ a, b, c }` represent the exact same non-degenerate line
+ * (including scalar multiples and negated forms like `x - y = 8` vs `-x + y = -8`).
+ * @param {{ a: number, b: number, c: number }} eqA
+ * @param {{ a: number, b: number, c: number }} eqB
+ * @returns {boolean}
+ */
+function areLinesEquivalent(eqA, eqB) {
+  const normA = Math.abs(eqA.a) + Math.abs(eqA.b);
+  const normB = Math.abs(eqB.a) + Math.abs(eqB.b);
+  if (normA < EPS || normB < EPS) return false;
+
+  const crossAB = Math.abs(eqA.a * eqB.b - eqB.a * eqA.b);
+  const crossAC = Math.abs(eqA.a * eqB.c - eqB.a * eqA.c);
+  const crossBC = Math.abs(eqA.b * eqB.c - eqB.b * eqA.c);
+  return crossAB < EPS && crossAC < EPS && crossBC < EPS;
+}
+
+/**
+ * Check if two equations have parallel normal vectors `(a, b)` regardless of constant `c`.
+ * @param {{ a: number, b: number }} eqA
+ * @param {{ a: number, b: number }} eqB
+ * @returns {boolean}
+ */
+function areCoefficientsParallel(eqA, eqB) {
+  const normA = Math.abs(eqA.a) + Math.abs(eqA.b);
+  const normB = Math.abs(eqB.a) + Math.abs(eqB.b);
+  if (normA < EPS || normB < EPS) return false;
+  return Math.abs(eqA.a * eqB.b - eqB.a * eqA.b) < EPS;
+}
+
+/**
+ * Evaluate physical tilt of a balance scale at a given `(xVal, yVal)`.
+ * Consistent physics: if Left Pan > Right Pan (`diff > 0`), Left Pan sinks DOWN,
+ * which is counter-clockwise rotation => negative `angleDeg`.
+ * @param {{ left: {x:number,y:number,c:number}, right: {x:number,y:number,c:number} }} scale
+ * @param {number} xVal Student's x numeric value
+ * @param {number} yVal Student's y numeric value
+ * @returns {{ leftVal: number, rightVal: number, diff: number, angleDeg: number, isBalanced: boolean }}
+ */
+function evaluateScaleTilt(scale, xVal, yVal) {
+  const leftVal = roundClean(
+    (scale.left.x ?? 0) * xVal + (scale.left.y ?? 0) * yVal + (scale.left.c ?? 0)
+  );
+  const rightVal = roundClean(
+    (scale.right.x ?? 0) * xVal + (scale.right.y ?? 0) * yVal + (scale.right.c ?? 0)
+  );
+  const diff = roundClean(leftVal - rightVal);
+  const isBalanced = Math.abs(diff) < 1e-4;
+  if (isBalanced) {
+    return { leftVal, rightVal, diff: 0, angleDeg: 0, isBalanced: true };
+  }
+  const scaleRef = Math.max(10, Math.abs(leftVal) + Math.abs(rightVal));
+  const rawAngle = (diff / scaleRef) * 28;
+  const magnitude = Math.min(16, Math.max(3.5, Math.abs(rawAngle)));
+  const angleDeg = roundClean(diff > 0 ? -magnitude : magnitude);
+  return { leftVal, rightVal, diff, angleDeg, isBalanced: false };
+}
+
+/**
+ * Check whether an equation `eq` is satisfied at `(u0, u1)` and is non-degenerate.
+ * @param {{ a: number, b: number, c: number }} eq
+ * @param {number} u0
+ * @param {number} u1
+ * @returns {boolean}
+ */
+function satisfiesPoint(eq, u0, u1) {
+  if (Math.abs(eq.a) + Math.abs(eq.b) < EPS) return false;
+  return Math.abs(eq.a * u0 + eq.b * u1 - eq.c) < 1e-3;
+}
+
+/**
+ * Diagnose specific student modeling misconceptions on one scale against a target clue.
+ * @param {{ a: number, b: number, c: number }} studentEq Canonical `(U0, U1)` equation
+ * @param {{ a: number, b: number, c: number }} targetClue Canonical `(U0, U1)` target equation
+ * @param {{ a: number, b: number, c: number } | null} otherClue Canonical `(U0, U1)` other clue
+ * @param {{ xLabel: string, yLabel: string }} varLabels
+ * @param {boolean} swapped
+ * @param {{ leftVal: number, rightVal: number, diff: number }} tiltInfo
+ * @returns {{ code: string, message: string }}
+ */
+function diagnoseScaleError(studentEq, targetClue, otherClue, varLabels, swapped, tiltInfo) {
+  const { a, b, c } = studentEq;
+  const xLabel = varLabels?.xLabel || 'x';
+  const yLabel = varLabels?.yLabel || 'y';
+
+  if (Math.abs(a) < EPS && Math.abs(b) < EPS) {
+    return {
+      code: 'empty',
+      message: '天平上還沒有放入未知數 x 或 y 喔！先從線索中判斷數量或單價是誰。',
+    };
+  }
+
+  // 1. Reversed difference / constant put on wrong side (`x + d = y` vs `x = y + d`)
+  // Checked before swapped_vars because for `x - y = d`, swapping x and y is identical to negating d.
+  if (Math.abs(targetClue.c) > EPS && areLinesEquivalent({ a, b, c: -c }, targetClue)) {
+    return {
+      code: 'reversed_diff',
+      message: '「比…多／少」或「剩／不足」加錯邊囉！想想看誰比較大，差值補在比較小的那一邊天平才會平。',
+    };
+  }
+
+  // 2. Swapped variables relative to canonical target
+  if (areLinesEquivalent({ a: b, b: a, c }, targetClue)) {
+    return {
+      code: 'swapped_vars',
+      message: `x（${xLabel}）和 y（${yLabel}）的倍數好像對調了！再核對一下誰乘上哪個數字。`,
+    };
+  }
+
+  // 3. Wrong operation sign between x and y (`x - y` vs `x + y`)
+  if (
+    (Math.abs(b) > EPS && areLinesEquivalent({ a, b: -b, c }, targetClue)) ||
+    (Math.abs(a) > EPS && areLinesEquivalent({ a: -a, b, c }, targetClue))
+  ) {
+    return {
+      code: 'wrong_op_sign',
+      message: '加減符號好像相反了！再讀一次這條線索是「合起來」還是「相差／比較」。',
+    };
+  }
+
+  // 4. Missing unit multiplier (used `1*x + 1*y` with the weighted clue's constant, e.g. `x + y = 34` instead of `2x + 4y = 34`)
+  if (otherClue && areCoefficientsParallel(studentEq, otherClue) && !areCoefficientsParallel(targetClue, otherClue)) {
+    const scaleFactor =
+      Math.abs(otherClue.a) > EPS ? a / otherClue.a : b / otherClue.b;
+    const scaledOtherC = roundClean(otherClue.c * scaleFactor);
+    if (Math.abs(c - scaledOtherC) > 1e-3) {
+      return {
+        code: 'missing_unit_multiplier',
+        message: '右邊的總數放對了，但左邊只放了基本個數！別忘了乘上每個單位的價錢、腳數或折數喔。',
+      };
+    }
+  }
+
+  // 5. Same (a, b) slope/ratio as target, only constant `c` is wrong
+  if (areCoefficientsParallel(studentEq, targetClue)) {
+    return {
+      code: 'wrong_constant',
+      message: 'x 與 y 的係數比例完全正確！再檢查一下常數（總數、差值或加減展開後的數值）有沒有算錯。',
+    };
+  }
+
+  // 6. General tilt feedback
+  const heavySide = tiltInfo.diff > 0 ? '左盤比較重（往下沉）' : '右盤比較重（往下沉）';
+  return {
+    code: 'general_tilt',
+    message: `在正確答案下這座天平目前${heavySide}，代表兩邊還沒代表同一個數量喔！再檢查題目條件。`,
+  };
+}
+
+/**
+ * Verify a student's complete two-scale submission for a level.
+ * Supports:
+ * - Direct match to assigned clue order (`assignedClueOrder = [0, 1]` or `[1, 0]`)
+ * - Swapped scale order (Scale 1 matches Clue B, Scale 2 matches Clue A)
+ * - Mathematically independent equivalent linear combinations passing through `(u0*, u1*)`
+ * - Explicit rejection & diagnostics for duplicate/dependent clues (`det === 0`)
+ *
+ * @param {object} level
+ * @param {boolean} swapped Whether student mapped `x -> u1, y -> u0`
+ * @param {{ left: {x:number,y:number,c:number}, right: {x:number,y:number,c:number} }} scale1
+ * @param {{ left: {x:number,y:number,c:number}, right: {x:number,y:number,c:number} }} scale2
+ * @param {[number, number]} [assignedClueOrder=[0, 1]]
+ */
+function verifyLevelAttempt(level, swapped, scale1, scale2, assignedClueOrder = [0, 1]) {
+  const clueA = level.clues[assignedClueOrder[0]].equation;
+  const clueB = level.clues[assignedClueOrder[1]].equation;
+  const { u0, u1 } = level.solution;
+
+  // Student's true values in student (x, y) coordinates
+  const trueX = swapped ? u1 : u0;
+  const trueY = swapped ? u0 : u1;
+
+  const eq1 = normalizeScale(scale1, swapped);
+  const eq2 = normalizeScale(scale2, swapped);
+
+  const tilt1 = evaluateScaleTilt(scale1, trueX, trueY);
+  const tilt2 = evaluateScaleTilt(scale2, trueX, trueY);
+
+  const eq1MatchesA = areLinesEquivalent(eq1, clueA);
+  const eq1MatchesB = areLinesEquivalent(eq1, clueB);
+  const eq2MatchesA = areLinesEquivalent(eq2, clueA);
+  const eq2MatchesB = areLinesEquivalent(eq2, clueB);
+
+  const systemSolve = solveSystem2x2(eq1, eq2);
+  const varLabels = {
+    xLabel: swapped ? level.unknowns[1].label : level.unknowns[0].label,
+    yLabel: swapped ? level.unknowns[0].label : level.unknowns[1].label,
+  };
+
+  // Case A: Exact match to assigned order
+  if (eq1MatchesA && eq2MatchesB) {
+    return {
+      passed: true,
+      matchType: 'exact_assigned',
+      scale1Balanced: true,
+      scale2Balanced: true,
+      tilt1,
+      tilt2,
+      eq1,
+      eq2,
+      feedback: '兩座天平完美平衡！你成功把兩句話都翻譯成聯立方程式了！',
+    };
+  }
+
+  // Case B: Student built the two clues in swapped scale slots
+  if (eq1MatchesB && eq2MatchesA) {
+    return {
+      passed: true,
+      matchType: 'exact_swapped_clues',
+      scale1Balanced: true,
+      scale2Balanced: true,
+      tilt1,
+      tilt2,
+      eq1,
+      eq2,
+      feedback: '太棒了！兩條線索雖然互換了天平位置，但一樣組成正確的聯立方程式！',
+    };
+  }
+
+  // Case C: Duplicate / dependent clues (coincident lines passing through solution)
+  if ((eq1MatchesA && eq2MatchesA) || (eq1MatchesB && eq2MatchesB) || systemSolve.status === 'coincident') {
+    const bothTrue = satisfiesPoint(eq1, u0, u1) && satisfiesPoint(eq2, u0, u1);
+    if (bothTrue) {
+      return {
+        passed: false,
+        matchType: 'duplicate_clue',
+        scale1Balanced: true,
+        scale2Balanced: true,
+        tilt1,
+        tilt2,
+        eq1,
+        eq2,
+        scale1Diag: null,
+        scale2Diag: {
+          code: 'duplicate_clue',
+          message: '這兩座天平列的是同一條線索（重合直線），解不出唯一答案！請把其中一座改成另一條線索。',
+        },
+        feedback: '⚠️ 警報！兩座天平其實是同一條線索（重合直線，有無限多組解），必須運用「另一條線索」才能鎖定唯一答案！',
+      };
+    }
+  }
+
+  // Case D: Valid independent equivalent linear system (e.g. algebraic combination of both clues)
+  if (
+    systemSolve.status === 'unique' &&
+    Math.abs(systemSolve.x - u0) < 1e-3 &&
+    Math.abs(systemSolve.y - u1) < 1e-3
+  ) {
+    return {
+      passed: true,
+      matchType: 'equivalent_system',
+      scale1Balanced: true,
+      scale2Balanced: true,
+      tilt1,
+      tilt2,
+      eq1,
+      eq2,
+      feedback: '厲害！你用等價的數學關係列出了兩條獨立方程式，同樣精準鎖定唯一交點！',
+    };
+  }
+
+  // Otherwise diagnose each scale individually against its assigned clue
+  const scale1Ok = eq1MatchesA || satisfiesPoint(eq1, u0, u1);
+  const scale2Ok = eq2MatchesB || satisfiesPoint(eq2, u0, u1);
+
+  const scale1Diag = scale1Ok
+    ? null
+    : diagnoseScaleError(eq1, clueA, clueB, varLabels, swapped, tilt1);
+  const scale2Diag = scale2Ok
+    ? null
+    : diagnoseScaleError(eq2, clueB, clueA, varLabels, swapped, tilt2);
+
+  let feedback = '再微調一下天平上的砝碼！';
+  if (!scale1Ok && !scale2Ok) {
+    feedback = '兩座天平目前都還沒完全吻合線索，請看看下方的偵探診斷提示！';
+  } else if (!scale1Ok) {
+    feedback = `天平 ② 已就位！再修正天平 ①：${scale1Diag.message}`;
+  } else if (!scale2Ok) {
+    feedback = `天平 ① 已平衡！再修正天平 ②：${scale2Diag.message}`;
+  }
+
+  return {
+    passed: false,
+    matchType: 'mismatch',
+    scale1Balanced: scale1Ok,
+    scale2Balanced: scale2Ok,
+    tilt1,
+    tilt2,
+    eq1,
+    eq2,
+    scale1Diag,
+    scale2Diag,
+    feedback,
+  };
+}
+
+/**
+ * Format a single pan expression into structured tokens for color-coded UI rendering.
+ * @param {{ x: number, y: number, c: number }} pan
+ * @returns {Array<{ kind: 'x'|'y'|'c'|'op'|'zero', sign: '+'|'-', absVal: number, text: string }>}
+ */
+function buildPanTokens(pan, xSym = 'x', ySym = 'y') {
+  const entries = [
+    { kind: 'x', val: roundClean(pan.x ?? 0), sym: xSym },
+    { kind: 'y', val: roundClean(pan.y ?? 0), sym: ySym },
+    { kind: 'c', val: roundClean(pan.c ?? 0), sym: '' },
+  ].filter((item) => Math.abs(item.val) >= EPS);
+
+  if (entries.length === 0) {
+    return [{ kind: 'zero', sign: '+', absVal: 0, text: '0' }];
+  }
+
+  const tokens = [];
+  entries.forEach((item, idx) => {
+    const isNeg = item.val < 0;
+    const absVal = roundClean(Math.abs(item.val));
+    if (idx > 0) {
+      tokens.push({ kind: 'op', sign: isNeg ? '-' : '+', absVal: 0, text: isNeg ? ' − ' : ' + ' });
+    }
+    const prefix = idx === 0 && isNeg ? '−' : '';
+    let body = '';
+    if (item.kind === 'c') {
+      body = formatCoeff(absVal);
+    } else {
+      body = Math.abs(absVal - 1) < EPS ? item.sym : `${formatCoeff(absVal)}${item.sym}`;
+    }
+    tokens.push({
+      kind: item.kind,
+      sign: isNeg ? '-' : '+',
+      absVal,
+      text: `${prefix}${body}`,
+    });
+  });
+
+  return tokens;
+}
+
+/**
+ * Format one pan as a plain string (e.g., "50x + 70y" or "0").
+ */
+function formatPanExpression(pan, xSym = 'x', ySym = 'y') {
+  return buildPanTokens(pan, xSym, ySym).map((t) => t.text).join('');
+}
+
+/**
+ * Format a full scale as an equation string (e.g., "50x + 70y = 460").
+ */
+function formatEquation(scale, xSym = 'x', ySym = 'y') {
+  return `${formatPanExpression(scale.left, xSym, ySym)} = ${formatPanExpression(scale.right, xSym, ySym)}`;
+}
+
+/**
+ * Format canonical `{ a, b, c }` in standard form `ax + by = c`, honoring `swapped`.
+ */
+function formatCanonicalEquation(eq, swapped = false) {
+  const cx = swapped ? eq.b : eq.a;
+  const cy = swapped ? eq.a : eq.b;
+  return `${formatPanExpression({ x: cx, y: cy, c: 0 })} = ${formatCoeff(eq.c)}`;
+}
+
+/**
+ * Compute line segment endpoints inside bounding box `[minX, maxX] x [minY, maxY]`
+ * for line `a*x + b*y = c` using Liang-Barsky / parametric clipping.
+ * Returns `null` if the line does not intersect the box.
+ */
+function computeLineBoxSegment(a, b, c, bounds) {
+  const { minX, maxX, minY, maxY } = bounds;
+  if (Math.abs(a) < EPS && Math.abs(b) < EPS) return null;
+
+  const candidates = [];
+  if (Math.abs(b) > EPS) {
+    const yAtMinX = (c - a * minX) / b;
+    if (yAtMinX >= minY - EPS && yAtMinX <= maxY + EPS) {
+      candidates.push({ x: minX, y: Math.min(maxY, Math.max(minY, yAtMinX)) });
+    }
+    const yAtMaxX = (c - a * maxX) / b;
+    if (yAtMaxX >= minY - EPS && yAtMaxX <= maxY + EPS) {
+      candidates.push({ x: maxX, y: Math.min(maxY, Math.max(minY, yAtMaxX)) });
+    }
+  }
+  if (Math.abs(a) > EPS) {
+    const xAtMinY = (c - b * minY) / a;
+    if (xAtMinY >= minX - EPS && xAtMinY <= maxX + EPS) {
+      candidates.push({ x: Math.min(maxX, Math.max(minX, xAtMinY)), y: minY });
+    }
+    const xAtMaxY = (c - b * maxY) / a;
+    if (xAtMaxY >= minX - EPS && xAtMaxY <= maxX + EPS) {
+      candidates.push({ x: Math.min(maxX, Math.max(minX, xAtMaxY)), y: maxY });
+    }
+  }
+
+  // Deduplicate corner hits
+  const unique = [];
+  for (const pt of candidates) {
+    if (!unique.some((u) => Math.hypot(u.x - pt.x, u.y - pt.y) < 1e-4)) {
+      unique.push(pt);
+    }
+  }
+  if (unique.length < 2) return null;
+  return [unique[0], unique[1]];
+}
+
+return { roundClean, formatCoeff, createEmptyScale, cloneScale, normalizeScale, solveSystem2x2, areLinesEquivalent, areCoefficientsParallel, evaluateScaleTilt, satisfiesPoint, diagnoseScaleError, verifyLevelAttempt, buildPanTokens, formatPanExpression, formatEquation, formatCanonicalEquation, computeLineBoxSegment, EPS };
+})();
+
+// === Module: ./src/data/levels.js ===
+const __mod_levels = (() => {
+const { formatCanonicalEquation, formatCoeff } = __mod_equationEngine;
+
+const WORLDS = [
+  { id: 1, name: '夜市小老闆', subtitle: '數量與總價的雙重謎題', color: '#3b82f6' },
+  { id: 2, name: '關係偵探社', subtitle: '誰比誰多？倍數與年齡轉換', color: '#8b5cf6' },
+  { id: 3, name: '校園生活趣', subtitle: '帳篷分配、給來給去與船速', color: '#10b981' },
+  { id: 4, name: '會考魔王殿', subtitle: '十位個位數、打折與綜合挑戰', color: '#f59e0b' },
+];
+
+/**
+ * Helper to get student-facing variable metadata honoring `swapped`.
+ */
+function getVarMeta(level, swapped = false) {
+  const u0 = level.unknowns[0];
+  const u1 = level.unknowns[1];
+  return {
+    x: swapped ? u1 : u0,
+    y: swapped ? u0 : u1,
+    xVal: swapped ? level.solution.u1 : level.solution.u0,
+    yVal: swapped ? level.solution.u0 : level.solution.u1,
+  };
+}
+
+/**
+ * Build standard 3-step solution explanation dynamically respecting `swapped`.
+ */
+function buildStandardSolvingSteps(level, swapped) {
+  const vm = getVarMeta(level, swapped);
+  const c1 = level.clues[0].equation;
+  const c2 = level.clues[1].equation;
+  const eq1Str = formatCanonicalEquation(c1, swapped);
+  const eq2Str = formatCanonicalEquation(c2, swapped);
+  return [
+    `列出聯立方程式：① ${eq1Str}，② ${eq2Str}`,
+    `觀察 x（${vm.x.label}）與 y（${vm.y.label}）的係數，利用加減消去法或代入消去法消去其中一個未知數。`,
+    `求得唯一交點：x = ${formatCoeff(vm.xVal)} ${vm.x.unit}，y = ${formatCoeff(vm.yVal)} ${vm.y.unit}，代回兩句話皆完全吻合！`,
+  ];
+}
+
+const LEVELS = [
+  // ==================== WORLD 1: 夜市小老闆 ====================
+  {
+    id: 1,
+    worldId: 1,
+    title: '珍奶與雞排',
+    badge: '夜市入門',
+    storySegments: [
+      { text: '小宇在夜市買了', kind: 'plain' },
+      { text: '珍珠奶茶與香酥雞排共 8 份', kind: 'clue', clueIndex: 0 },
+      { text: '，', kind: 'plain' },
+      { text: '珍奶每杯 50 元、雞排每份 70 元，總共付了 460 元', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問珍奶買了幾杯？雞排買了幾份？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '珍奶杯數', unit: '杯', icon: '🧋', chipText: '珍奶買了幾杯' },
+      { id: 'u1', label: '雞排份數', unit: '份', icon: '🍗', chipText: '雞排買了幾份' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '總共付了 460 元', reason: '460 元是題目已經給的已知總金額，不需要設成未知數喔！' },
+      { id: 'd1', chipText: '一共買了 8 份', reason: '8 份是兩樣餐點的已知總數量，不能當成未知數喔！' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '總數量線索',
+        text: '珍珠奶茶與香酥雞排共 8 份',
+        equation: { a: 1, b: 1, c: 8 },
+      },
+      {
+        id: 'c1',
+        tag: '總金額線索',
+        text: '珍奶每杯 50 元、雞排每份 70 元，總共付了 460 元',
+        equation: { a: 50, b: 70, c: 460 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問珍奶買了幾杯？雞排買了幾份？',
+      reason: '這是題目的「問題」，裡面沒有給出等量關係，不能用來列天平喔！',
+    },
+    numberChips: [
+      { value: 8, label: '8', note: '共 8 份' },
+      { value: 50, label: '50', note: '珍奶單價' },
+      { value: 70, label: '70', note: '雞排單價' },
+      { value: 460, label: '460', note: '總金額' },
+    ],
+    solution: { u0: 5, u1: 3 },
+    barDiagramHint: { type: 'sum', total: 8, desc: '總份數由「珍奶」與「雞排」拼在一起！' },
+    hints: (swapped) => {
+      const vm = getVarMeta(LEVELS[0], swapped);
+      return [
+        `先看第一句話：買的「${vm.x.label} (${vm.x.icon})」和「${vm.y.label} (${vm.y.icon})」合起來剛好等於 8 份！`,
+        `第二句話算總金額：每${vm.x.unit}${vm.x.label} ${swapped ? 70 : 50} 元，每${vm.y.unit}${vm.y.label} ${swapped ? 50 : 70} 元，左盤放價錢總和，右盤放 460！`,
+        `完整答案參考：天平 ① 放 ${formatCanonicalEquation({ a: 1, b: 1, c: 8 }, swapped)}；天平 ② 放 ${formatCanonicalEquation({ a: 50, b: 70, c: 460 }, swapped)}。`,
+      ];
+    },
+    solvingSteps: (swapped) => {
+      const vm = getVarMeta(LEVELS[0], swapped);
+      return [
+        `① ${formatCanonicalEquation({ a: 1, b: 1, c: 8 }, swapped)}，② ${formatCanonicalEquation({ a: 50, b: 70, c: 460 }, swapped)}`,
+        `把 ① 式全部乘以 50 得到 50x + 50y = 400，再用 ② 式減掉它消去其中一個未知數！`,
+        `算出 ${vm.x.label} = ${vm.xVal} ${vm.x.unit}、${vm.y.label} = ${vm.yVal} ${vm.y.unit}（5×50 + 3×70 = 460 元）。`,
+      ];
+    },
+  },
+  {
+    id: 2,
+    worldId: 1,
+    title: '遊樂園門票',
+    badge: '單價反推',
+    storySegments: [
+      { text: '週末大家一起去遊樂園：', kind: 'plain' },
+      { text: '買 2 張成人票和 3 張兒童票共花了 950 元', kind: 'clue', clueIndex: 0 },
+      { text: '；另一個家庭', kind: 'plain' },
+      { text: '買 4 張成人票和 1 張兒童票共花了 1150 元', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問成人票一張多少元？兒童票一張多少元？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '成人票單價', unit: '元', icon: '🎟️', chipText: '成人票一張多少元' },
+      { id: 'u1', label: '兒童票單價', unit: '元', icon: '🎫', chipText: '兒童票一張多少元' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '買 2 張成人票', reason: '2 張成人票是已知的張數，未知的是「每一張票多少元」喔！' },
+      { id: 'd1', chipText: '共花了 950 元', reason: '950 元是題目給的已知總價，不能設成未知數！' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '第一組購票',
+        text: '買 2 張成人票和 3 張兒童票共花了 950 元',
+        equation: { a: 2, b: 3, c: 950 },
+      },
+      {
+        id: 'c1',
+        tag: '第二組購票',
+        text: '買 4 張成人票和 1 張兒童票共花了 1150 元',
+        equation: { a: 4, b: 1, c: 1150 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問成人票一張多少元？兒童票一張多少元？',
+      reason: '問句只是告訴我們要設什麼未知數，不是方程式的等量線索。',
+    },
+    numberChips: [
+      { value: 2, label: '2', note: '2 張' },
+      { value: 3, label: '3', note: '3 張' },
+      { value: 950, label: '950', note: '第一組花費' },
+      { value: 4, label: '4', note: '4 張' },
+      { value: 1150, label: '1150', note: '第二組花費' },
+    ],
+    solution: { u0: 250, u1: 150 },
+    hints: (swapped) => {
+      const xRole = swapped ? '兒童票' : '成人票';
+      const yRole = swapped ? '成人票' : '兒童票';
+      return [
+        `注意看這題未知數是「單價」：x 代表 1 張${xRole}的錢，y 代表 1 張${yRole}的錢。`,
+        `第一組：${swapped ? '3x + 2y = 950' : '2x + 3y = 950'}；第二組把張數乘以單價後放左盤，總價放右盤。`,
+        `完整答案參考：天平 ① 放 ${formatCanonicalEquation({ a: 2, b: 3, c: 950 }, swapped)}；天平 ② 放 ${formatCanonicalEquation({ a: 4, b: 1, c: 1150 }, swapped)}。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[1], swapped),
+  },
+  {
+    id: 3,
+    worldId: 1,
+    title: '農場雞兔同籠',
+    badge: '隱藏常識',
+    storySegments: [
+      { text: '開心農場裡養了一群雞與兔子，', kind: 'plain' },
+      { text: '數一數總共有 12 顆頭', kind: 'clue', clueIndex: 0 },
+      { text: '，', kind: 'plain' },
+      { text: '牠們在地上加起來總共有 34 隻腳', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問農場裡雞和兔子各有幾隻？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '雞的隻數', unit: '隻', icon: '🐔', chipText: '雞有幾隻' },
+      { id: 'u1', label: '兔子的隻數', unit: '隻', icon: '🐰', chipText: '兔子有幾隻' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '雞有幾隻腳', reason: '1 隻雞固定有 2 隻腳，這是生活常識不是未知數，題目問的是「隻數」！' },
+      { id: 'd1', chipText: '總共有 34 隻腳', reason: '34 隻腳是已知總數喔！' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '總頭數線索',
+        text: '數一數總共有 12 顆頭',
+        equation: { a: 1, b: 1, c: 12 },
+      },
+      {
+        id: 'c1',
+        tag: '總腳數線索',
+        text: '牠們在地上加起來總共有 34 隻腳',
+        equation: { a: 2, b: 4, c: 34 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問農場裡雞和兔子各有幾隻？',
+      reason: '這是最後的提問句，先留著它幫我們設 x 和 y，不要放進兩條線索框！',
+    },
+    numberChips: [
+      { value: 12, label: '12', note: '總頭數' },
+      { value: 34, label: '34', note: '總腳數' },
+      { value: 2, label: '2', note: '生活常識：雞 2 隻腳' },
+      { value: 4, label: '4', note: '生活常識：兔 4 隻腳' },
+    ],
+    solution: { u0: 7, u1: 5 },
+    hints: (swapped) => {
+      const chickenSym = swapped ? 'y' : 'x';
+      const rabbitSym = swapped ? 'x' : 'y';
+      return [
+        `每隻雞與兔子都只有 1 顆頭，所以 12 顆頭代表牠們的總隻數相加等於 12。`,
+        `隱藏常識來了！1 隻雞有 2 隻腳，1 隻兔有 4 隻腳，所以總腳數是 2${chickenSym} + 4${rabbitSym} = 34。`,
+        `完整答案參考：天平 ① 放 ${formatCanonicalEquation({ a: 1, b: 1, c: 12 }, swapped)}；天平 ② 放 ${formatCanonicalEquation({ a: 2, b: 4, c: 34 }, swapped)}。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[2], swapped),
+  },
+
+  // ==================== WORLD 2: 關係偵探社 ====================
+  {
+    id: 4,
+    worldId: 2,
+    title: '限量貼紙收藏',
+    badge: '和差關係',
+    storySegments: [
+      { text: '小晴和小安一起收集限量閃亮貼紙，', kind: 'plain' },
+      { text: '兩人合起來總共有 36 張貼紙', kind: 'clue', clueIndex: 0 },
+      { text: '，而且', kind: 'plain' },
+      { text: '小晴比小安多 8 張', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問小晴和小安各自有多少張貼紙？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '小晴貼紙數', unit: '張', icon: '⭐', chipText: '小晴有幾張貼紙' },
+      { id: 'u1', label: '小安貼紙數', unit: '張', icon: '💎', chipText: '小安有幾張貼紙' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '總共有 36 張', reason: '36 是兩人的已知總數喔！' },
+      { id: 'd1', chipText: '相差 8 張', reason: '8 是兩人數量的已知差距，不需要設為未知數。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '總和線索',
+        text: '兩人合起來總共有 36 張貼紙',
+        equation: { a: 1, b: 1, c: 36 },
+      },
+      {
+        id: 'c1',
+        tag: '誰比誰多線索',
+        text: '小晴比小安多 8 張',
+        equation: { a: 1, b: -1, c: 8 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問小晴和小安各自有多少張貼紙？',
+      reason: '這是問句！用來決定 x、y 的代表對象即可。',
+    },
+    numberChips: [
+      { value: 36, label: '36', note: '總張數' },
+      { value: 8, label: '8', note: '小晴多 8 張' },
+    ],
+    solution: { u0: 22, u1: 14 },
+    barDiagramHint: { type: 'sum_diff', diff: 8, desc: '小晴比較長，小安要多加 8 才會和小晴一樣長喔！' },
+    hints: (swapped) => {
+      const qingSym = swapped ? 'y' : 'x';
+      const anSym = swapped ? 'x' : 'y';
+      return [
+        `「誰比誰多」可以想成天平平衡：小晴 (${qingSym}) 比較重，要讓小安 (${anSym}) 跟小晴一樣重，8 要加在小安那一盤！`,
+        `也就是說「${qingSym} = ${anSym} + 8」，或者用相減寫成「${qingSym} − ${anSym} = 8」都可以平衡！`,
+        `完整答案參考：天平 ① 放 ${formatCanonicalEquation({ a: 1, b: 1, c: 36 }, swapped)}；天平 ② 放 ${qingSym} = ${anSym} + 8。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[3], swapped),
+  },
+  {
+    id: 5,
+    worldId: 2,
+    title: '神奇扭蛋機',
+    badge: '倍數少多少',
+    storySegments: [
+      { text: '玩具店有藍、紅兩台扭蛋機，', kind: 'plain' },
+      { text: '兩台裡面總共裝了 52 顆扭蛋', kind: 'clue', clueIndex: 0 },
+      { text: '；老闆補充說：', kind: 'plain' },
+      { text: '藍色機的扭蛋數比紅色機的 3 倍還少 4 顆', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問藍色機和紅色機原來各有幾顆扭蛋？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '藍色機扭蛋數', unit: '顆', icon: '🔵', chipText: '藍色機有幾顆' },
+      { id: 'u1', label: '紅色機扭蛋數', unit: '顆', icon: '🔴', chipText: '紅色機有幾顆' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '總共 52 顆', reason: '52 是兩台總和的已知數字。' },
+      { id: 'd1', chipText: '3 倍少 4 顆', reason: '這是兩台之間的數量關係，不是未知數名稱喔！' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '總和線索',
+        text: '兩台裡面總共裝了 52 顆扭蛋',
+        equation: { a: 1, b: 1, c: 52 },
+      },
+      {
+        id: 'c1',
+        tag: '倍數加減線索',
+        text: '藍色機的扭蛋數比紅色機的 3 倍還少 4 顆',
+        equation: { a: 1, b: -3, c: -4 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問藍色機和紅色機原來各有幾顆扭蛋？',
+      reason: '問句不含等號條件，不可放進線索盤喔！',
+    },
+    numberChips: [
+      { value: 52, label: '52', note: '總顆數' },
+      { value: 3, label: '3', note: '紅色機的 3 倍' },
+      { value: 4, label: '4', note: '少 4 顆' },
+    ],
+    solution: { u0: 38, u1: 14 },
+    barDiagramHint: { type: 'ratio', mult: 3, offset: -4, desc: '「比紅色的 3 倍少 4」就是：藍色 = 3×紅色 − 4（或 藍色 + 4 = 3×紅色）！' },
+    hints: (swapped) => {
+      const bSym = swapped ? 'y' : 'x';
+      const rSym = swapped ? 'x' : 'y';
+      return [
+        `照著中文順序翻譯「是 / 比」：藍色機 (${bSym})「等於」紅色機 (${rSym}) 的 3 倍再減 4！`,
+        `試著在天平 ② 左盤放 1 個 ${bSym}，右盤放 3 個 ${rSym} 和「−4」（或者左盤放 ${bSym} + 4，右盤放 3${rSym}）！`,
+        `完整答案參考：天平 ① 放 ${bSym} + ${rSym} = 52；天平 ② 放 ${bSym} = 3${rSym} − 4。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[4], swapped),
+  },
+  {
+    id: 6,
+    worldId: 2,
+    title: '穿越時光機',
+    badge: '年齡同步長大',
+    storySegments: [
+      { text: '關於爸爸和兒子今年的年齡：', kind: 'plain' },
+      { text: '今年父子兩人的年齡和是 50 歲', kind: 'clue', clueIndex: 0 },
+      { text: '，', kind: 'plain' },
+      { text: '5 年後，爸爸的年齡剛好會是兒子年齡的 2 倍', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問今年爸爸和兒子各幾歲？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '爸爸今年歲數', unit: '歲', icon: '👨', chipText: '爸爸今年幾歲' },
+      { id: 'u1', label: '兒子今年歲數', unit: '歲', icon: '👦', chipText: '兒子今年幾歲' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '5 年後爸爸的年齡', reason: '設「今年幾歲」列式最單純！5 年後只要把今年歲數 +5 就好。' },
+      { id: 'd1', chipText: '年齡和是 50 歲', reason: '50 歲是已知的總和數值喔。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '今年年齡和',
+        text: '今年父子兩人的年齡和是 50 歲',
+        equation: { a: 1, b: 1, c: 50 },
+      },
+      {
+        id: 'c1',
+        tag: '5 年後的倍數',
+        text: '5 年後，爸爸的年齡剛好會是兒子年齡的 2 倍',
+        equation: { a: 1, b: -2, c: 5 },
+        expansionHint: '小提示：兩人都要加 5 歲喔！5年後：爸爸 + 5 = 2 × (兒子 + 5) = 2×兒子 + 10',
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問今年爸爸和兒子各幾歲？',
+      reason: '這是題目的提問，不代表方程式條件。',
+    },
+    numberChips: [
+      { value: 50, label: '50', note: '今年年齡和' },
+      { value: 5, label: '5', note: '5 年後 (+5)' },
+      { value: 2, label: '2', note: '2 倍' },
+      { value: 10, label: '10', note: '展開：2×5 = 10' },
+    ],
+    solution: { u0: 35, u1: 15 },
+    hints: (swapped) => {
+      const dSym = swapped ? 'y' : 'x';
+      const sSym = swapped ? 'x' : 'y';
+      return [
+        `陷阱注意！5 年後爸爸是 (${dSym} + 5) 歲，兒子「也會長大 5 歲」變成 (${sSym} + 5) 歲喔！`,
+        `把 2 倍分配進去：左盤放「${dSym} + 5」，右盤放「2${sSym} + 10」（2×5=10），天平就會乖乖平衡！`,
+        `完整答案參考：天平 ① 放 ${dSym} + ${sSym} = 50；天平 ② 放 ${dSym} + 5 = 2${sSym} + 10（即 ${dSym} − 2${sSym} = 5）。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[5], swapped),
+  },
+
+  // ==================== WORLD 3: 校園生活趣 ====================
+  {
+    id: 7,
+    worldId: 3,
+    title: '童軍露營帳篷',
+    badge: '盈虧分配',
+    storySegments: [
+      { text: '童軍社舉辦露營活動分配帳篷：', kind: 'plain' },
+      { text: '如果每頂帳篷住 4 人，會多出 6 個學生沒位置住', kind: 'clue', clueIndex: 0 },
+      { text: '；', kind: 'plain' },
+      { text: '如果改為每頂帳篷住 6 人，最後會空出 4 個床位', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問共有多少學生？幾頂帳篷？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '學生總人數', unit: '人', icon: '🎒', chipText: '共有幾位學生' },
+      { id: 'u1', label: '帳篷總頂數', unit: '頂', icon: '⛺', chipText: '共有幾頂帳篷' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '多出 6 個學生', reason: '6 人是已知的剩餘人數，不是未知數喔。' },
+      { id: 'd1', chipText: '每頂住 4 人', reason: '4 人是題目設定的分配規則（係數），不是未知數。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '第一種住法',
+        text: '如果每頂帳篷住 4 人，會多出 6 個學生沒位置住',
+        equation: { a: 1, b: -4, c: 6 },
+      },
+      {
+        id: 'c1',
+        tag: '第二種住法',
+        text: '如果改為每頂帳篷住 6 人，最後會空出 4 個床位',
+        equation: { a: 1, b: -6, c: -4 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問共有多少學生？幾頂帳篷？',
+      reason: '問句用來設定 x、y 即可！',
+    },
+    numberChips: [
+      { value: 4, label: '4', note: '每頂 4 人 / 空 4 位' },
+      { value: 6, label: '6', note: '多 6 人 / 每頂 6 人' },
+    ],
+    solution: { u0: 26, u1: 5 },
+    hints: (swapped) => {
+      const stuSym = swapped ? 'y' : 'x';
+      const tentSym = swapped ? 'x' : 'y';
+      return [
+        `不管怎麼分配，兩條線索都是在計算「學生總人數 (${stuSym})」怎麼等於帳篷裡的床位加加減減！`,
+        `住 4 人多 6 個學生：學生總數 = 4×帳篷 + 6；住 6 人空 4 個床位：學生總數 = 6×帳篷 − 4。`,
+        `完整答案參考：天平 ① 放 ${stuSym} = 4${tentSym} + 6；天平 ② 放 ${stuSym} = 6${tentSym} − 4。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[6], swapped),
+  },
+  {
+    id: 8,
+    worldId: 3,
+    title: '分享巧克力',
+    badge: '雙向轉移',
+    storySegments: [
+      { text: '哥哥和弟弟各有一盒巧克力：', kind: 'plain' },
+      { text: '哥哥原本比弟弟多 10 顆巧克力', kind: 'clue', clueIndex: 0 },
+      { text: '；', kind: 'plain' },
+      { text: '如果弟弟給哥哥 3 顆後，哥哥的數量就會是弟弟剩下的 3 倍', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問哥哥和弟弟原本各有幾顆巧克力？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '哥哥原本顆數', unit: '顆', icon: '🍫', chipText: '哥哥原本有幾顆' },
+      { id: 'u1', label: '弟弟原本顆數', unit: '顆', icon: '🍬', chipText: '弟弟原本有幾顆' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '弟弟給哥哥 3 顆', reason: '3 顆是轉移的已知數量！' },
+      { id: 'd1', chipText: '變成 3 倍', reason: '3 倍是關係倍率，未知的是兩人「原本的顆數」。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '原本差距',
+        text: '哥哥原本比弟弟多 10 顆巧克力',
+        equation: { a: 1, b: -1, c: 10 },
+      },
+      {
+        id: 'c1',
+        tag: '給出後倍數',
+        text: '如果弟弟給哥哥 3 顆後，哥哥的數量就會是弟弟剩下的 3 倍',
+        equation: { a: 1, b: -3, c: -12 },
+        expansionHint: '小提示：給出後，哥哥變 (哥 + 3)、弟弟變 (弟 − 3)！右邊展開：3×(弟 − 3) = 3×弟 − 9',
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問哥哥和弟弟原本各有幾顆巧克力？',
+      reason: '問句不是列式條件喔！',
+    },
+    numberChips: [
+      { value: 10, label: '10', note: '原本多 10 顆' },
+      { value: 3, label: '3', note: '給 3 顆 / 3 倍' },
+      { value: 9, label: '9', note: '展開：3×3 = 9' },
+    ],
+    solution: { u0: 21, u1: 11 },
+    hints: (swapped) => {
+      const broSym = swapped ? 'y' : 'x';
+      const lilSym = swapped ? 'x' : 'y';
+      return [
+        `「給來給去」記得雙向加減！弟弟給哥哥 3 顆後：哥哥變成 (${broSym} + 3)，弟弟變成 (${lilSym} − 3)。`,
+        `哥哥是弟弟剩下的 3 倍 → 天平 ② 左盤放「${broSym} + 3」，右盤放 3×(${lilSym} − 3) 展開後的「3${lilSym} − 9」！`,
+        `完整答案參考：天平 ① 放 ${broSym} = ${lilSym} + 10；天平 ② 放 ${broSym} + 3 = 3${lilSym} − 9。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[7], swapped),
+  },
+  {
+    id: 9,
+    worldId: 3,
+    title: '河流觀光渡輪',
+    badge: '順流與逆流',
+    storySegments: [
+      { text: '觀光渡輪在相距 36 公里的上下游碼頭往返：', kind: 'plain' },
+      { text: '順流行駛 2 小時可以跑完全程 36 公里', kind: 'clue', clueIndex: 0 },
+      { text: '；', kind: 'plain' },
+      { text: '回程逆流行駛需要 3 小時才跑完 36 公里', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問渡輪在靜水中的船速與水流速率各是多少 km/h？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '靜水船速', unit: 'km/h', icon: '⛴️', chipText: '靜水中的船速' },
+      { id: 'u1', label: '水流速率', unit: 'km/h', icon: '🌊', chipText: '河水的流速' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '碼頭相距 36 公里', reason: '36 公里是已知距離，不要設成未知數！' },
+      { id: 'd1', chipText: '順流 2 小時', reason: '2 小時是已知的時間。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '順流行駛',
+        text: '順流行駛 2 小時可以跑完全程 36 公里',
+        equation: { a: 2, b: 2, c: 36 },
+        expansionHint: '距離 = 速率 × 時間！順流速率 = (船速 + 水速)，乘上 2 小時 = 2×船速 + 2×水速',
+      },
+      {
+        id: 'c1',
+        tag: '逆流行駛',
+        text: '回程逆流行駛需要 3 小時才跑完 36 公里',
+        equation: { a: 3, b: -3, c: 36 },
+        expansionHint: '逆流速率 = (船速 − 水速)，乘上 3 小時 = 3×船速 − 3×水速',
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問渡輪在靜水中的船速與水流速率各是多少 km/h？',
+      reason: '這是最後問句，用於定義未知數。',
+    },
+    numberChips: [
+      { value: 36, label: '36', note: '距離 36 km' },
+      { value: 2, label: '2', note: '順流 2 小時' },
+      { value: 3, label: '3', note: '逆流 3 小時' },
+    ],
+    solution: { u0: 15, u1: 3 },
+    hints: (swapped) => {
+      const boatSym = swapped ? 'y' : 'x';
+      const waterSym = swapped ? 'x' : 'y';
+      return [
+        `公式：距離 = 速率 × 時間！順流有水推著走，速度是「${boatSym} + ${waterSym}」；逆流會被水擋住，速度是「${boatSym} − ${waterSym}」。`,
+        `兩邊展開後：順流 2 小時是「2${boatSym} + 2${waterSym} = 36」；逆流 3 小時是「3${boatSym} − 3${waterSym} = 36」（也可直接約分寫成 ${boatSym}+${waterSym}=18、${boatSym}−${waterSym}=12 喔！）。`,
+        `完整答案參考：天平 ① 放 2${boatSym} + 2${waterSym} = 36；天平 ② 放 3${boatSym} − 3${waterSym} = 36。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[8], swapped),
+  },
+
+  // ==================== WORLD 4: 會考魔王殿 ====================
+  {
+    id: 10,
+    worldId: 4,
+    title: '密碼保險箱',
+    badge: '十位與個位',
+    storySegments: [
+      { text: '一個神祕兩位數密碼鎖有以下線索：', kind: 'plain' },
+      { text: '原密碼的十位數字與個位數字之和為 9', kind: 'clue', clueIndex: 0 },
+      { text: '；', kind: 'plain' },
+      { text: '若把十位數字與個位數字對調，所得的新數比原數大 27', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問原密碼的十位數字和個位數字各是多少？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '原十位數字', unit: '', icon: '🔟', chipText: '原數的十位數字' },
+      { id: 'u1', label: '原個位數字', unit: '', icon: '1️⃣', chipText: '原數的個位數字' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '新數比原數大 27', reason: '27 是兩數的已知差值喔。' },
+      { id: 'd1', chipText: '數字之和為 9', reason: '9 是已知的數字和。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '數字和線索',
+        text: '原密碼的十位數字與個位數字之和為 9',
+        equation: { a: 1, b: 1, c: 9 },
+      },
+      {
+        id: 'c1',
+        tag: '位值對調差值',
+        text: '若把十位數字與個位數字對調，所得的新數比原數大 27',
+        equation: { a: -9, b: 9, c: 27 },
+        expansionHint: '位值公式：原數 = 10×十位 + 個位；對調新數 = 10×個位 + 十位！把「原數 + 27」放左盤，「新數」放右盤試試看！',
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問原密碼的十位數字和個位數字各是多少？',
+      reason: '這是題目問句喔。',
+    },
+    numberChips: [
+      { value: 9, label: '9', note: '數字和 9 / 係數 9' },
+      { value: 27, label: '27', note: '新數大 27' },
+      { value: 10, label: '10', note: '位值權重：十位 × 10' },
+      { value: 1, label: '1', note: '位值權重：個位 × 1' },
+    ],
+    solution: { u0: 3, u1: 6 },
+    hints: (swapped) => {
+      const tenSym = swapped ? 'y' : 'x';
+      const oneSym = swapped ? 'x' : 'y';
+      return [
+        `切記！十位數字 ${tenSym} 在數值上代表「10${tenSym}」，所以原數 = 10${tenSym} + ${oneSym}，對調新數 = 10${oneSym} + ${tenSym}！`,
+        `直接照題目放上天平 ②：左盤放新數「10${oneSym} + ${tenSym}」，右盤放原數加 27「10${tenSym} + ${oneSym} + 27」就會自動抵銷成 9${oneSym} − 9${tenSym} = 27！`,
+        `完整答案參考：天平 ① 放 ${tenSym} + ${oneSym} = 9；天平 ② 放 10${oneSym} + ${tenSym} = 10${tenSym} + ${oneSym} + 27。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[9], swapped),
+  },
+  {
+    id: 11,
+    worldId: 4,
+    title: '咖啡廳優惠日',
+    badge: '會考單價題',
+    storySegments: [
+      { text: '文青咖啡廳今天舉辦點餐實戰：', kind: 'plain' },
+      { text: '點 3 杯拿鐵與 2 塊起司蛋糕一共需要 440 元', kind: 'clue', clueIndex: 0 },
+      { text: '；', kind: 'plain' },
+      { text: '已知單買 1 杯拿鐵的價錢比 1 塊起司蛋糕便宜 20 元', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問拿鐵與起司蛋糕原價各多少元？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '拿鐵單價', unit: '元', icon: '☕', chipText: '拿鐵一杯多少元' },
+      { id: 'u1', label: '蛋糕單價', unit: '元', icon: '🍰', chipText: '蛋糕一塊多少元' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '一共需要 440 元', reason: '440 元是已知的結帳總金額。' },
+      { id: 'd1', chipText: '便宜 20 元', reason: '20 元是兩者單價的已知差距。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '組合總價',
+        text: '點 3 杯拿鐵與 2 塊起司蛋糕一共需要 440 元',
+        equation: { a: 3, b: 2, c: 440 },
+      },
+      {
+        id: 'c1',
+        tag: '單價比較',
+        text: '已知單買 1 杯拿鐵的價錢比 1 塊起司蛋糕便宜 20 元',
+        equation: { a: 1, b: -1, c: -20 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問拿鐵與起司蛋糕原價各多少元？',
+      reason: '這是最後的提問句，不是條件式喔。',
+    },
+    numberChips: [
+      { value: 3, label: '3', note: '3 杯拿鐵' },
+      { value: 2, label: '2', note: '2 塊蛋糕' },
+      { value: 440, label: '440', note: '共 440 元' },
+      { value: 20, label: '20', note: '便宜 20 元' },
+    ],
+    solution: { u0: 80, u1: 100 },
+    hints: (swapped) => {
+      const latSym = swapped ? 'y' : 'x';
+      const cakeSym = swapped ? 'x' : 'y';
+      return [
+        `先比較誰比較貴！「拿鐵比蛋糕便宜 20 元」，代表拿鐵 (${latSym}) 比較輕，把 +20 補在拿鐵盤才會跟蛋糕 (${cakeSym}) 一樣重！`,
+        `天平 ①：3${latSym} + 2${cakeSym} = 440；天平 ②：${latSym} + 20 = ${cakeSym}（或寫成 ${latSym} = ${cakeSym} − 20）。`,
+        `完整答案參考：天平 ① 放 3${latSym} + 2${cakeSym} = 440；天平 ② 放 ${latSym} + 20 = ${cakeSym}。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[10], swapped),
+  },
+  {
+    id: 12,
+    worldId: 4,
+    title: '書店週年慶打折',
+    badge: '百分率魔王',
+    storySegments: [
+      { text: '書局週年慶促銷活動：', kind: 'plain' },
+      { text: '小美挑選了一本小說與一本漫畫，兩本原價合計 500 元', kind: 'clue', clueIndex: 0 },
+      { text: '；結帳時', kind: 'plain' },
+      { text: '小說打 8 折、漫畫打 9 折，折價後一共實付 420 元', kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問這本小說和漫畫的原價各是多少元？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '小說原價', unit: '元', icon: '📖', chipText: '小說原價多少元' },
+      { id: 'u1', label: '漫畫原價', unit: '元', icon: '📚', chipText: '漫畫原價多少元' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: '原價合計 500 元', reason: '500 元是已知原價總和。' },
+      { id: 'd1', chipText: '打折後實付 420 元', reason: '420 元是折扣後已知實付金額。' },
+    ],
+    clues: [
+      {
+        id: 'c0',
+        tag: '原價合計',
+        text: '小美挑選了一本小說與一本漫畫，兩本原價合計 500 元',
+        equation: { a: 1, b: 1, c: 500 },
+      },
+      {
+        id: 'c1',
+        tag: '打折實付',
+        text: '小說打 8 折、漫畫打 9 折，折價後一共實付 420 元',
+        equation: { a: 0.8, b: 0.9, c: 420 },
+      },
+    ],
+    clueDistractor: {
+      id: 'cd0',
+      text: '請問這本小說和漫畫的原價各是多少元？',
+      reason: '這是問句！先設原價為 x、y 最簡潔好算。',
+    },
+    numberChips: [
+      { value: 500, label: '500', note: '原價合計' },
+      { value: 0.8, label: '0.8', note: '8 折 = ×0.8' },
+      { value: 0.9, label: '0.9', note: '9 折 = ×0.9' },
+      { value: 420, label: '420', note: '折後實付' },
+    ],
+    solution: { u0: 300, u1: 200 },
+    hints: (swapped) => {
+      const novSym = swapped ? 'y' : 'x';
+      const comSym = swapped ? 'x' : 'y';
+      return [
+        `台灣常考打折轉換：「8 折」就是原價 × 0.8，「9 折」就是原價 × 0.9！（若習慣整數，左右同乘 10 寫成 8${novSym} + 9${comSym} = 4200 天平也會認得喔！）`,
+        `天平 ① 放原價相加：${novSym} + ${comSym} = 500；天平 ② 放折扣價相加：0.8${novSym} + 0.9${comSym} = 420。`,
+        `完整答案參考：天平 ① 放 ${novSym} + ${comSym} = 500；天平 ② 放 0.8${novSym} + 0.9${comSym} = 420。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(LEVELS[11], swapped),
+  },
+];
+
+/**
+ * Simple deterministic-or-random integer helper.
+ */
+function randInt(rng, min, max) {
+  return Math.floor(rng() * (max - min + 1)) + min;
+}
+
+/**
+ * Procedural practice level generator across 5 distinct word-problem templates.
+ * Guaranteed positive integer solutions and linearly independent clues.
+ * @param {number} [templateIndex] Optional 0..4 template selector
+ * @param {() => number} [rng=Math.random]
+ */
+function generatePracticeLevel(templateIndex = undefined, rng = Math.random) {
+  const chosenTemplate =
+    typeof templateIndex === 'number' ? ((templateIndex % 5) + 5) % 5 : randInt(rng, 0, 4);
+
+  if (chosenTemplate === 0) {
+    // Template 0: 飲品與點心（數量＋總價）
+    const pairs = [
+      { n1: '紅茶', u1: '杯', i1: '🧋', n2: '鬆餅', u2: '份', i2: '🧇' },
+      { n1: '豆花', u1: '碗', i1: '🍮', n2: '蔥油餅', u2: '張', i2: '🫓' },
+      { n1: '原子筆', u1: '枝', i1: '🖊️', n2: '筆記本', u2: '本', i2: '📓' },
+    ];
+    const item = pairs[randInt(rng, 0, pairs.length - 1)];
+    const u0 = randInt(rng, 3, 9);
+    const u1 = randInt(rng, 2, 8);
+    const p1 = randInt(rng, 2, 5) * 10;
+    const p2 = p1 + randInt(rng, 1, 4) * 10;
+    const totalCount = u0 + u1;
+    const totalCost = p1 * u0 + p2 * u1;
+    return createProceduralObj({
+      id: 100,
+      title: `無限練習：${item.n1}與${item.n2}`,
+      badge: '隨機練習・數量總價',
+      storySegments: [
+        { text: '小偵探採買任務：', kind: 'plain' },
+        { text: `${item.n1}與${item.n2}合計買了 ${totalCount} 個`, kind: 'clue', clueIndex: 0 },
+        { text: '，', kind: 'plain' },
+        { text: `${item.n1}每${item.u1} ${p1} 元、${item.n2}每${item.u2} ${p2} 元，一共花了 ${totalCost} 元`, kind: 'clue', clueIndex: 1 },
+        { text: '。', kind: 'plain' },
+        { text: `請問${item.n1}和${item.n2}各買了多少？`, kind: 'question' },
+      ],
+      unknowns: [
+        { id: 'u0', label: `${item.n1}數量`, unit: item.u1, icon: item.i1, chipText: `${item.n1}買了幾${item.u1}` },
+        { id: 'u1', label: `${item.n2}數量`, unit: item.u2, icon: item.i2, chipText: `${item.n2}買了幾${item.u2}` },
+      ],
+      unknownDistractors: [
+        { id: 'd0', chipText: `合計買了 ${totalCount} 個`, reason: `${totalCount} 是已知總數量喔！` },
+        { id: 'd1', chipText: `共花了 ${totalCost} 元`, reason: `${totalCost} 元是已知總金額。` },
+      ],
+      clues: [
+        { id: 'c0', tag: '總數量', text: `${item.n1}與${item.n2}合計買了 ${totalCount} 個`, equation: { a: 1, b: 1, c: totalCount } },
+        { id: 'c1', tag: '總金額', text: `${item.n1}每${item.u1} ${p1} 元、${item.n2}每${item.u2} ${p2} 元，一共花了 ${totalCost} 元`, equation: { a: p1, b: p2, c: totalCost } },
+      ],
+      clueDistractor: { id: 'cd0', text: `請問${item.n1}和${item.n2}各買了多少？`, reason: '問句不構成平衡方程式喔！' },
+      numberChips: [
+        { value: totalCount, label: String(totalCount), note: '總數量' },
+        { value: p1, label: String(p1), note: `${item.n1}單價` },
+        { value: p2, label: String(p2), note: `${item.n2}單價` },
+        { value: totalCost, label: String(totalCost), note: '總金額' },
+      ],
+      solution: { u0, u1 },
+    });
+  }
+
+  if (chosenTemplate === 1) {
+    // Template 1: 和差問題（誰比誰多）
+    const u1 = randInt(rng, 8, 25);
+    const diff = randInt(rng, 4, 16);
+    const u0 = u1 + diff;
+    const sum = u0 + u1;
+    return createProceduralObj({
+      id: 101,
+      title: '無限練習：社團積分賽',
+      badge: '隨機練習・和差關係',
+      storySegments: [
+        { text: '藍隊與紅隊參加益智問答，', kind: 'plain' },
+        { text: `兩隊總積分合計 ${sum} 分`, kind: 'clue', clueIndex: 0 },
+        { text: '，而且', kind: 'plain' },
+        { text: `藍隊比紅隊多 ${diff} 分`, kind: 'clue', clueIndex: 1 },
+        { text: '。', kind: 'plain' },
+        { text: '請問藍隊和紅隊各得幾分？', kind: 'question' },
+      ],
+      unknowns: [
+        { id: 'u0', label: '藍隊得分', unit: '分', icon: '🔵', chipText: '藍隊得幾分' },
+        { id: 'u1', label: '紅隊得分', unit: '分', icon: '🔴', chipText: '紅隊得幾分' },
+      ],
+      unknownDistractors: [
+        { id: 'd0', chipText: `合計 ${sum} 分`, reason: `${sum} 分是已知的兩隊總和！` },
+        { id: 'd1', chipText: `多 ${diff} 分`, reason: `${diff} 分是已知差距。` },
+      ],
+      clues: [
+        { id: 'c0', tag: '總積分', text: `兩隊總積分合計 ${sum} 分`, equation: { a: 1, b: 1, c: sum } },
+        { id: 'c1', tag: '相差分數', text: `藍隊比紅隊多 ${diff} 分`, equation: { a: 1, b: -1, c: diff } },
+      ],
+      clueDistractor: { id: 'cd0', text: '請問藍隊和紅隊各得幾分？', reason: '問句只用來決定未知數，不是方程式喔。' },
+      numberChips: [
+        { value: sum, label: String(sum), note: '總分' },
+        { value: diff, label: String(diff), note: '藍隊多出分數' },
+      ],
+      solution: { u0, u1 },
+    });
+  }
+
+  if (chosenTemplate === 2) {
+    // Template 2: 雞兔 / 汽機車數輪子
+    const u0 = randInt(rng, 4, 15); // 機車 (2輪)
+    const u1 = randInt(rng, 3, 12); // 汽車 (4輪)
+    const totalVehicles = u0 + u1;
+    const totalWheels = 2 * u0 + 4 * u1;
+    return createProceduralObj({
+      id: 102,
+      title: '無限練習：停車場數輪子',
+      badge: '隨機練習・隱藏係數',
+      storySegments: [
+        { text: '停車場裡停滿了兩輪機車與四輪汽車，', kind: 'plain' },
+        { text: `數一數總共有 ${totalVehicles} 輛車`, kind: 'clue', clueIndex: 0 },
+        { text: '，', kind: 'plain' },
+        { text: `地上的輪胎合計有 ${totalWheels} 個輪子`, kind: 'clue', clueIndex: 1 },
+        { text: '。', kind: 'plain' },
+        { text: '請問機車和汽車各有幾輛？', kind: 'question' },
+      ],
+      unknowns: [
+        { id: 'u0', label: '機車數量', unit: '輛', icon: '🛵', chipText: '機車有幾輛' },
+        { id: 'u1', label: '汽車數量', unit: '輛', icon: '🚗', chipText: '汽車有幾輛' },
+      ],
+      unknownDistractors: [
+        { id: 'd0', chipText: `共有 ${totalVehicles} 輛`, reason: '這是已知總輛數。' },
+        { id: 'd1', chipText: `合計 ${totalWheels} 個輪子`, reason: '這是已知總輪胎數。' },
+      ],
+      clues: [
+        { id: 'c0', tag: '總車輛數', text: `數一數總共有 ${totalVehicles} 輛車`, equation: { a: 1, b: 1, c: totalVehicles } },
+        { id: 'c1', tag: '總輪胎數', text: `地上的輪胎合計有 ${totalWheels} 個輪子`, equation: { a: 2, b: 4, c: totalWheels } },
+      ],
+      clueDistractor: { id: 'cd0', text: '請問機車和汽車各有幾輛？', reason: '這是提問句，不是關係條件。' },
+      numberChips: [
+        { value: totalVehicles, label: String(totalVehicles), note: '總車輛數' },
+        { value: totalWheels, label: String(totalWheels), note: '總輪胎數' },
+        { value: 2, label: '2', note: '常識：機車 2 輪' },
+        { value: 4, label: '4', note: '常識：汽車 4 輪' },
+      ],
+      solution: { u0, u1 },
+    });
+  }
+
+  if (chosenTemplate === 3) {
+    // Template 3: 分組盈虧（長椅/帳篷）
+    const k1 = randInt(rng, 3, 5);
+    const k2 = k1 + 2;
+    const u1 = randInt(rng, 4, 10); // 椅子數量
+    const surplus = randInt(rng, 2, 7);
+    const u0 = k1 * u1 + surplus; // 學生人數
+    const deficit = k2 * u1 - u0; // 保證 > 0 只要 k2*u1 > u0 => 2*u1 > surplus => 2*4=8 > 7, always > 0!
+    return createProceduralObj({
+      id: 103,
+      title: '無限練習：禮堂排座椅',
+      badge: '隨機練習・盈虧分配',
+      storySegments: [
+        { text: '校慶集合分配禮堂長椅：', kind: 'plain' },
+        { text: `每張長椅坐 ${k1} 人，會多出 ${surplus} 人站著`, kind: 'clue', clueIndex: 0 },
+        { text: '；', kind: 'plain' },
+        { text: `每張長椅坐 ${k2} 人，則會空出 ${deficit} 個座位`, kind: 'clue', clueIndex: 1 },
+        { text: '。', kind: 'plain' },
+        { text: '請問現場有幾位學生？幾張長椅？', kind: 'question' },
+      ],
+      unknowns: [
+        { id: 'u0', label: '學生人數', unit: '人', icon: '🧑‍🎓', chipText: '學生有幾人' },
+        { id: 'u1', label: '長椅張數', unit: '張', icon: '🪑', chipText: '長椅有幾張' },
+      ],
+      unknownDistractors: [
+        { id: 'd0', chipText: `多出 ${surplus} 人`, reason: '這是已知多出來的人數。' },
+        { id: 'd1', chipText: `空出 ${deficit} 個位子`, reason: '這是已知空缺的座位數。' },
+      ],
+      clues: [
+        { id: 'c0', tag: '擠一點坐', text: `每張長椅坐 ${k1} 人，會多出 ${surplus} 人站著`, equation: { a: 1, b: -k1, c: surplus } },
+        { id: 'c1', tag: '分開點坐', text: `每張長椅坐 ${k2} 人，則會空出 ${deficit} 個座位`, equation: { a: 1, b: -k2, c: -deficit } },
+      ],
+      clueDistractor: { id: 'cd0', text: '請問現場有幾位學生？幾張長椅？', reason: '這是題目問句喔。' },
+      numberChips: [
+        { value: k1, label: String(k1), note: `每張 ${k1} 人` },
+        { value: surplus, label: String(surplus), note: `多 ${surplus} 人` },
+        { value: k2, label: String(k2), note: `每張 ${k2} 人` },
+        { value: deficit, label: String(deficit), note: `空 ${deficit} 位` },
+      ],
+      solution: { u0, u1 },
+    });
+  }
+
+  // Template 4: 倍數比較問題
+  const mult = randInt(rng, 2, 4);
+  const offset = randInt(rng, 2, 9);
+  const u1 = randInt(rng, 6, 18);
+  const u0 = mult * u1 + offset;
+  const total = u0 + u1;
+  return createProceduralObj({
+    id: 104,
+    title: '無限練習：圖書館藏書',
+    badge: '隨機練習・倍數關係',
+    storySegments: [
+      { text: '圖書館統計科學與文學兩區書架：', kind: 'plain' },
+      { text: `兩區總共有 ${total} 本書`, kind: 'clue', clueIndex: 0 },
+      { text: '，', kind: 'plain' },
+      { text: `科學區的書比文學區的 ${mult} 倍還多 ${offset} 本`, kind: 'clue', clueIndex: 1 },
+      { text: '。', kind: 'plain' },
+      { text: '請問科學區與文學區各有幾本書？', kind: 'question' },
+    ],
+    unknowns: [
+      { id: 'u0', label: '科學區書數', unit: '本', icon: '🔬', chipText: '科學區有幾本' },
+      { id: 'u1', label: '文學區書數', unit: '本', icon: '📜', chipText: '文學區有幾本' },
+    ],
+    unknownDistractors: [
+      { id: 'd0', chipText: `總共 ${total} 本`, reason: '這是已知總本數。' },
+      { id: 'd1', chipText: `多 ${offset} 本`, reason: '這是已知的差額本數。' },
+    ],
+    clues: [
+      { id: 'c0', tag: '兩區合計', text: `兩區總共有 ${total} 本書`, equation: { a: 1, b: 1, c: total } },
+      { id: 'c1', tag: '倍數多幾本', text: `科學區的書比文學區的 ${mult} 倍還多 ${offset} 本`, equation: { a: 1, b: -mult, c: offset } },
+    ],
+    clueDistractor: { id: 'cd0', text: '請問科學區與文學區各有幾本書？', reason: '問句不含等式條件！' },
+    numberChips: [
+      { value: total, label: String(total), note: '總本數' },
+      { value: mult, label: String(mult), note: `${mult} 倍` },
+      { value: offset, label: String(offset), note: `多 ${offset} 本` },
+    ],
+    solution: { u0, u1 },
+  });
+}
+
+function createProceduralObj(base) {
+  return {
+    ...base,
+    worldId: 0,
+    isProcedural: true,
+    hints: (swapped) => {
+      const vm = getVarMeta(base, swapped);
+      return [
+        `先從第一句話判斷「${vm.x.label}」與「${vm.y.label}」是相加、相減還是倍數關係。`,
+        `建議天平 ① 放入：${formatCanonicalEquation(base.clues[0].equation, swapped)}。`,
+        `完整答案參考：天平 ① 放 ${formatCanonicalEquation(base.clues[0].equation, swapped)}；天平 ② 放 ${formatCanonicalEquation(base.clues[1].equation, swapped)}。`,
+      ];
+    },
+    solvingSteps: (swapped) => buildStandardSolvingSteps(base, swapped),
+  };
+}
+
+return { getVarMeta, generatePracticeLevel, WORLDS, LEVELS };
+})();
+
+// === Module: ../../shared/audio/soundEngine.js ===
+const __mod_soundEngine = (() => {
+/**
+ * Zero-asset procedural Web Audio sound synthesizer.
+ * Shared across all games in the Learning Games Hub.
+ * Safe no-op in headless Node or when audio is muted/blocked.
+ */
+
+let audioCtx = null;
+let muted = false;
+
+function getCtx() {
+  if (muted || typeof window === 'undefined') return null;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioCtx) {
+    try {
+      audioCtx = new Ctx();
+    } catch {
+      return null;
+    }
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+function setMuted(val) {
+  muted = Boolean(val);
+}
+
+function isMuted() {
+  return muted;
+}
+
+function playTone({ type = 'sine', freq = 440, endFreq = null, duration = 0.12, gain = 0.12, delay = 0 } = {}) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (endFreq !== null) {
+    osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), t0 + duration);
+  }
+  amp.gain.setValueAtTime(0.0001, t0);
+  amp.gain.linearRampToValueAtTime(gain, t0 + 0.012);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(amp);
+  amp.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+}
+
+function playPop() {
+  playTone({ type: 'sine', freq: 520, endFreq: 760, duration: 0.08, gain: 0.1 });
+}
+
+function playDrop() {
+  playTone({ type: 'triangle', freq: 240, endFreq: 140, duration: 0.11, gain: 0.14 });
+}
+
+function playClink() {
+  playTone({ type: 'sine', freq: 880, endFreq: 1120, duration: 0.09, gain: 0.08 });
+}
+
+function playError() {
+  playTone({ type: 'sawtooth', freq: 210, endFreq: 135, duration: 0.22, gain: 0.08 });
+}
+
+function playBalanceLock() {
+  playTone({ type: 'triangle', freq: 523.25, duration: 0.12, gain: 0.11, delay: 0 });
+  playTone({ type: 'triangle', freq: 659.25, duration: 0.12, gain: 0.11, delay: 0.08 });
+  playTone({ type: 'triangle', freq: 783.99, duration: 0.18, gain: 0.12, delay: 0.16 });
+}
+
+function playVictory() {
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((f, idx) => {
+    playTone({ type: 'triangle', freq: f, duration: idx === 3 ? 0.38 : 0.14, gain: 0.12, delay: idx * 0.09 });
+  });
+}
+
+return { setMuted, isMuted, playTone, playPop, playDrop, playClink, playError, playBalanceLock, playVictory };
+})();
+
+// === Module: ./src/ui/scaleRenderer.js ===
+const __mod_scaleRenderer = (() => {
+const { buildPanTokens, EPS, formatCoeff, formatEquation, formatPanExpression } = __mod_equationEngine;
+
+/**
+ * Render an accessible, physically-tilting SVG balance scale.
+ * Computes exact beam endpoints so hanging pans stay upright and readable.
+ */
+function renderScaleSVG({
+  title = '天平',
+  scale,
+  angleDeg = 0,
+  status = 'idle', // 'idle' | 'balanced' | 'tilted'
+  varMeta,
+  accentColor = '#4f46e5',
+  compact = false,
+}) {
+  const width = compact ? 300 : 360;
+  const height = compact ? 156 : 196;
+  const cx = width / 2;
+  const pivotY = compact ? 38 : 46;
+  const halfBeam = compact ? 92 : 112;
+  const rad = (angleDeg * Math.PI) / 180;
+
+  const lx = cx - halfBeam * Math.cos(rad);
+  const ly = pivotY - halfBeam * Math.sin(rad);
+  const rx = cx + halfBeam * Math.cos(rad);
+  const ry = pivotY + halfBeam * Math.sin(rad);
+
+  const dropH = compact ? 40 : 52;
+  const panW = compact ? 76 : 92;
+  const lPanY = ly + dropH;
+  const rPanY = ry + dropH;
+
+  const leftText = formatPanExpression(scale.left);
+  const rightText = formatPanExpression(scale.right);
+  const statusLabel =
+    status === 'balanced'
+      ? '已平衡'
+      : status === 'tilted'
+        ? angleDeg < 0
+          ? '左盤較重（下沉）'
+          : '右盤較重（下沉）'
+        : '等待檢驗';
+
+  const statusColor =
+    status === 'balanced' ? '#10b981' : status === 'tilted' ? '#ef4444' : accentColor;
+
+  const leftBadges = renderPanVisualTokens(scale.left, lx, lPanY - 12, varMeta, compact);
+  const rightBadges = renderPanVisualTokens(scale.right, rx, rPanY - 12, varMeta, compact);
+
+  return `
+    <svg class="scale-svg ${status === 'balanced' ? 'is-balanced' : ''}" viewBox="0 0 ${width} ${height}" role="img">
+      <title>${escapeHtml(title)}：左盤 ${escapeHtml(leftText)}，右盤 ${escapeHtml(rightText)}，狀態：${statusLabel}</title>
+      <!-- Base & Pillar -->
+      <rect x="${cx - 46}" y="${height - 14}" width="92" height="10" rx="5" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5" />
+      <rect x="${cx - 6}" y="${pivotY + 8}" width="12" height="${height - pivotY - 22}" rx="3" fill="#94a3b8" />
+      <!-- Fulcrum triangle -->
+      <polygon points="${cx},${pivotY - 4} ${cx - 12},${pivotY + 14} ${cx + 12},${pivotY + 14}" fill="#f59e0b" stroke="#92400e" stroke-width="1.5" />
+
+      <!-- Hanging Left Chain + Pan -->
+      <line x1="${lx}" y1="${ly}" x2="${lx - panW * 0.34}" y2="${lPanY}" stroke="#64748b" stroke-width="1.5" />
+      <line x1="${lx}" y1="${ly}" x2="${lx + panW * 0.34}" y2="${lPanY}" stroke="#64748b" stroke-width="1.5" />
+      <path d="M ${lx - panW / 2} ${lPanY} Q ${lx} ${lPanY + 14} ${lx + panW / 2} ${lPanY} Z" fill="#e2e8f0" stroke="#475569" stroke-width="1.8" />
+
+      <!-- Hanging Right Chain + Pan -->
+      <line x1="${rx}" y1="${ry}" x2="${rx - panW * 0.34}" y2="${rPanY}" stroke="#64748b" stroke-width="1.5" />
+      <line x1="${rx}" y1="${ry}" x2="${rx + panW * 0.34}" y2="${rPanY}" stroke="#64748b" stroke-width="1.5" />
+      <path d="M ${rx - panW / 2} ${rPanY} Q ${rx} ${rPanY + 14} ${rx + panW / 2} ${rPanY} Z" fill="#e2e8f0" stroke="#475569" stroke-width="1.8" />
+
+      <!-- Beam -->
+      <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="${statusColor}" stroke-width="6" stroke-linecap="round" />
+      <circle cx="${lx}" cy="${ly}" r="4.5" fill="#ffffff" stroke="${statusColor}" stroke-width="2" />
+      <circle cx="${rx}" cy="${ry}" r="4.5" fill="#ffffff" stroke="${statusColor}" stroke-width="2" />
+      <circle cx="${cx}" cy="${pivotY}" r="5.5" fill="#ffffff" stroke="#92400e" stroke-width="2" />
+
+      <!-- Tokens sitting on pans -->
+      ${leftBadges}
+      ${rightBadges}
+
+      <!-- Status Pill near Base -->
+      <rect x="${cx - 46}" y="${height - 40}" width="92" height="22" rx="11" fill="${status === 'balanced' ? '#dcfce7' : status === 'tilted' ? '#fee2e2' : '#eef2ff'}" stroke="${statusColor}" stroke-width="1.4" />
+      <text x="${cx}" y="${height - 25}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${status === 'balanced' ? '#166534' : status === 'tilted' ? '#991b1b' : '#3730a3'}">${status === 'balanced' ? '✅ 已平衡' : status === 'tilted' ? (angleDeg < 0 ? '↙ 左盤重' : '↘ 右盤重') : '⚖️ 等號平衡'}</text>
+    </svg>
+  `;
+}
+
+function renderPanVisualTokens(pan, centerX, baseY, varMeta, compact) {
+  const tokens = buildPanTokens(pan).filter((t) => t.kind !== 'op' && t.kind !== 'zero');
+  if (tokens.length === 0) {
+    return `<text x="${centerX}" y="${baseY}" text-anchor="middle" font-size="11" fill="#94a3b8">(空盤 0)</text>`;
+  }
+
+  const slotW = compact ? 36 : 42;
+  const startX = centerX - ((tokens.length - 1) * slotW) / 2;
+
+  return tokens
+    .map((tok, i) => {
+      const tx = startX + i * slotW;
+      const isNeg = tok.sign === '-';
+      const fill =
+        tok.kind === 'x'
+          ? isNeg
+            ? '#fee2e2'
+            : '#dbeafe'
+          : tok.kind === 'y'
+            ? isNeg
+              ? '#ffedd5'
+              : '#fef3c7'
+            : isNeg
+              ? '#fce7f3'
+              : '#f1f5f9';
+      const stroke =
+        tok.kind === 'x'
+          ? isNeg
+            ? '#ef4444'
+            : '#2563eb'
+          : tok.kind === 'y'
+            ? isNeg
+              ? '#ea580c'
+              : '#d97706'
+            : isNeg
+              ? '#db2777'
+              : '#64748b';
+      const textFill =
+        tok.kind === 'x'
+          ? isNeg
+            ? '#b91c1c'
+            : '#1d4ed8'
+          : tok.kind === 'y'
+            ? isNeg
+              ? '#c2410c'
+              : '#b45309'
+            : isNeg
+              ? '#9d174d'
+              : '#334155';
+
+      const icon =
+        tok.kind === 'x'
+          ? varMeta?.x?.icon || '📦'
+          : tok.kind === 'y'
+            ? varMeta?.y?.icon || '📦'
+            : '⚖️';
+
+      // Buoyant lift for negative chips
+      const ty = isNeg ? baseY - 12 : baseY;
+      const dashAttr = isNeg ? 'stroke-dasharray="3 2"' : '';
+      const labelStr =
+        tok.kind === 'c'
+          ? `${isNeg ? '−' : ''}${formatCoeff(tok.absVal)}`
+          : `${isNeg ? '−' : ''}${Math.abs(tok.absVal - 1) < EPS ? '' : formatCoeff(tok.absVal)}${tok.kind}`;
+
+      return `
+        <g>
+          ${isNeg ? `<line x1="${tx}" y1="${ty + 10}" x2="${tx}" y2="${baseY + 8}" stroke="${stroke}" stroke-width="1" stroke-dasharray="2 2" />` : ''}
+          <rect x="${tx - 17}" y="${ty - 16}" width="34" height="24" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="1.6" ${dashAttr} />
+          <text x="${tx}" y="${ty - 18}" text-anchor="middle" font-size="11">${icon}</text>
+          <text x="${tx}" y="${ty}" text-anchor="middle" font-size="11" font-weight="800" fill="${textFill}">${escapeHtml(labelStr)}</text>
+        </g>
+      `;
+    })
+    .join('');
+}
+
+/**
+ * Render an educational Tape/Bar Diagram (`線段對比圖`) showing how the two sides
+ * of a student's scale compare conceptually (total sum, difference, or multiple).
+ */
+function renderTapeDiagramSVG({ clue, scale, varMeta, swapped }) {
+  const eqText = formatEquation(scale);
+  const leftTokens = buildPanTokens(scale.left);
+  const rightTokens = buildPanTokens(scale.right);
+
+  const width = 340;
+  const height = 104;
+
+  function renderBarRow(tokens, yPos, label) {
+    const cleanTokens = tokens.filter((t) => t.kind !== 'op');
+    if (cleanTokens.length === 1 && cleanTokens[0].kind === 'zero') {
+      return `
+        <text x="8" y="${yPos + 17}" font-size="11" font-weight="700" fill="#64748b">${label}</text>
+        <rect x="46" y="${yPos}" width="282" height="26" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 3" />
+        <text x="187" y="${yPos + 17}" text-anchor="middle" font-size="11.5" fill="#94a3b8">空盤 (0)</text>
+      `;
+    }
+
+    const totalW = 282;
+    const weights = cleanTokens.map((t) => {
+      if (t.kind === 'x' || t.kind === 'y') return Math.max(1.2, Math.min(4, Math.abs(t.absVal)));
+      return 1.3;
+    });
+    const sumW = weights.reduce((acc, w) => acc + w, 0) || 1;
+    let curX = 46;
+
+    const segs = cleanTokens
+      .map((tok, i) => {
+        const w = (weights[i] / sumW) * totalW - 3;
+        const isNeg = tok.sign === '-';
+        const fill =
+          tok.kind === 'x'
+            ? isNeg
+              ? '#fee2e2'
+              : '#dbeafe'
+            : tok.kind === 'y'
+              ? isNeg
+                ? '#ffedd5'
+                : '#fef3c7'
+              : '#e2e8f0';
+        const stroke =
+          tok.kind === 'x' ? '#2563eb' : tok.kind === 'y' ? '#d97706' : '#64748b';
+        const txt = `${tok.sign === '-' ? '−' : i > 0 ? '+' : ''}${tok.kind === 'c' ? formatCoeff(tok.absVal) : `${Math.abs(tok.absVal - 1) < EPS ? '' : formatCoeff(tok.absVal)}${tok.kind}`}`;
+        const rect = `
+          <rect x="${curX}" y="${yPos}" width="${Math.max(24, w)}" height="26" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="1.5" ${isNeg ? 'stroke-dasharray="4 2"' : ''} />
+          <text x="${curX + Math.max(24, w) / 2}" y="${yPos + 17}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">${escapeHtml(txt)}</text>
+        `;
+        curX += Math.max(24, w) + 3;
+        return rect;
+      })
+      .join('');
+
+    return `<text x="8" y="${yPos + 17}" font-size="11" font-weight="700" fill="#475569">${label}</text>${segs}`;
+  }
+
+  return `
+    <svg class="tape-diagram-svg" viewBox="0 0 ${width} ${height}" role="img">
+      <title>線段對比圖：${escapeHtml(eqText)}</title>
+      ${renderBarRow(leftTokens, 14, '左盤')}
+      <line x1="46" y1="47" x2="328" y2="47" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3" />
+      <text x="18" y="51" font-size="11" font-weight="800" fill="#4f46e5">=</text>
+      ${renderBarRow(rightTokens, 56, '右盤')}
+      <text x="170" y="98" text-anchor="middle" font-size="10.5" fill="#64748b">對比：${escapeHtml(clue?.tag || '線索')}（左長 = 右長 時天平平衡）</text>
+    </svg>
+  `;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+return { renderScaleSVG, renderTapeDiagramSVG };
+})();
+
+// === Module: ./src/ui/graphRenderer.js ===
+const __mod_graphRenderer = (() => {
+const { computeLineBoxSegment, formatCanonicalEquation, formatCoeff } = __mod_equationEngine;
+
+/**
+ * Render an interactive 2D SVG coordinate graph showing Line ①, Line ②,
+ * their intersection `(x*, y*)`, and an optional live test probe point `(testX, testY)`.
+ */
+function renderCoordinateGraphSVG({
+  eq1,
+  eq2,
+  solution, // { u0, u1 } in canonical coordinates
+  swapped = false,
+  varMeta,
+  testPoint = null, // { x, y } in student (x, y) coordinates
+  showLine2 = true,
+  historyDots = [],
+}) {
+  const width = 420;
+  const height = 300;
+  const pad = { top: 24, right: 28, bottom: 44, left: 52 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+
+  // Student-coordinate equations
+  const sEq1 = swapped ? { a: eq1.b, b: eq1.a, c: eq1.c } : eq1;
+  const sEq2 = swapped ? { a: eq2.b, b: eq2.a, c: eq2.c } : eq2;
+
+  const trueX = swapped ? solution.u1 : solution.u0;
+  const trueY = swapped ? solution.u0 : solution.u1;
+
+  // Determine neat viewport bounds covering (0,0), (trueX, trueY), and intercepts
+  const xCandidates = [trueX * 1.45, 10];
+  const yCandidates = [trueY * 1.45, 10];
+  if (Math.abs(sEq1.a) > 1e-6 && sEq1.c / sEq1.a > 0 && sEq1.c / sEq1.a < trueX * 3.5) {
+    xCandidates.push((sEq1.c / sEq1.a) * 1.15);
+  }
+  if (Math.abs(sEq1.b) > 1e-6 && sEq1.c / sEq1.b > 0 && sEq1.c / sEq1.b < trueY * 3.5) {
+    yCandidates.push((sEq1.c / sEq1.b) * 1.15);
+  }
+  if (testPoint) {
+    xCandidates.push(testPoint.x * 1.15);
+    yCandidates.push(testPoint.y * 1.15);
+  }
+
+  const maxX = chooseNiceBound(Math.max(...xCandidates));
+  const maxY = chooseNiceBound(Math.max(...yCandidates));
+  const bounds = { minX: 0, maxX, minY: 0, maxY };
+
+  const toPxX = (vx) => pad.left + ((vx - bounds.minX) / (bounds.maxX - bounds.minX)) * plotW;
+  const toPxY = (vy) => pad.top + plotH - ((vy - bounds.minY) / (bounds.maxY - bounds.minY)) * plotH;
+
+  // Grid ticks (5 intervals)
+  const ticks = [0, 0.25, 0.5, 0.75, 1];
+  const gridLines = ticks
+    .map((t) => {
+      const gx = bounds.minX + t * (bounds.maxX - bounds.minX);
+      const gy = bounds.minY + t * (bounds.maxY - bounds.minY);
+      const px = toPxX(gx);
+      const py = toPxY(gy);
+      return `
+        <line x1="${px}" y1="${pad.top}" x2="${px}" y2="${pad.top + plotH}" stroke="#e2e8f0" stroke-width="1" />
+        <text x="${px}" y="${pad.top + plotH + 16}" text-anchor="middle" font-size="10.5" fill="#64748b">${formatCoeff(Math.round(gx * 10) / 10)}</text>
+        <line x1="${pad.left}" y1="${py}" x2="${pad.left + plotW}" y2="${py}" stroke="#e2e8f0" stroke-width="1" />
+        <text x="${pad.left - 8}" y="${py + 4}" text-anchor="end" font-size="10.5" fill="#64748b">${formatCoeff(Math.round(gy * 10) / 10)}</text>
+      `;
+    })
+    .join('');
+
+  const seg1 = computeLineBoxSegment(sEq1.a, sEq1.b, sEq1.c, bounds);
+  const seg2 = showLine2 ? computeLineBoxSegment(sEq2.a, sEq2.b, sEq2.c, bounds) : null;
+
+  const line1Svg = seg1
+    ? `<line class="graph-line-1" x1="${toPxX(seg1[0].x)}" y1="${toPxY(seg1[0].y)}" x2="${toPxX(seg1[1].x)}" y2="${toPxY(seg1[1].y)}" stroke="#4f46e5" stroke-width="3.2" stroke-linecap="round" />`
+    : '';
+
+  const line2Svg = seg2
+    ? `<line class="graph-line-2" x1="${toPxX(seg2[0].x)}" y1="${toPxY(seg2[0].y)}" x2="${toPxX(seg2[1].x)}" y2="${toPxY(seg2[1].y)}" stroke="#10b981" stroke-width="3.2" stroke-linecap="round" />`
+    : '';
+
+  const ix = toPxX(trueX);
+  const iy = toPxY(trueY);
+
+  const historySvg = historyDots
+    .map((pt) => {
+      const hx = toPxX(pt.x);
+      const hy = toPxY(pt.y);
+      return `<circle cx="${hx}" cy="${hy}" r="4.5" fill="#818cf8" stroke="#ffffff" stroke-width="1.5" opacity="0.85" />`;
+    })
+    .join('');
+
+  const probeSvg = testPoint
+    ? (() => {
+        const px = toPxX(Math.min(maxX, Math.max(0, testPoint.x)));
+        const py = toPxY(Math.min(maxY, Math.max(0, testPoint.y)));
+        const onSolution =
+          Math.abs(testPoint.x - trueX) < 1e-4 && Math.abs(testPoint.y - trueY) < 1e-4;
+        return `
+          <line x1="${px}" y1="${pad.top + plotH}" x2="${px}" y2="${py}" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.2" />
+          <line x1="${pad.left}" y1="${py}" x2="${px}" y2="${py}" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.2" />
+          <circle cx="${px}" cy="${py}" r="7" fill="${onSolution ? '#f59e0b' : '#ec4899'}" stroke="#ffffff" stroke-width="2.2" />
+          <rect x="${Math.min(width - 96, px + 8)}" y="${Math.max(8, py - 24)}" width="84" height="20" rx="6" fill="#0f172a" opacity="0.88" />
+          <text x="${Math.min(width - 96, px + 8) + 42}" y="${Math.max(8, py - 24) + 14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">(${formatCoeff(testPoint.x)}, ${formatCoeff(testPoint.y)})</text>
+        `;
+      })()
+    : '';
+
+  const eq1Label = formatCanonicalEquation(eq1, swapped);
+  const eq2Label = formatCanonicalEquation(eq2, swapped);
+
+  return `
+    <svg class="coord-graph-svg" viewBox="0 0 ${width} ${height}" role="img">
+      <title>二元一次聯立方程式交點圖：直線一 ${eq1Label}${showLine2 ? ` 與直線二 ${eq2Label} 相交於 (${trueX}, ${trueY})` : ''}</title>
+      <rect x="${pad.left}" y="${pad.top}" width="${plotW}" height="${plotH}" fill="#ffffff" rx="6" />
+      ${gridLines}
+
+      <!-- Axes -->
+      <line x1="${pad.left}" y1="${pad.top + plotH}" x2="${pad.left + plotW}" y2="${pad.top + plotH}" stroke="#2563eb" stroke-width="2" />
+      <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="#d97706" stroke-width="2" />
+
+      <text x="${pad.left + plotW}" y="${pad.top + plotH + 34}" text-anchor="end" font-size="11.5" font-weight="700" fill="#1d4ed8">x (${varMeta.x.label})</text>
+      <text x="${pad.left + 4}" y="${pad.top - 8}" text-anchor="start" font-size="11.5" font-weight="700" fill="#b45309">y (${varMeta.y.label})</text>
+
+      <!-- Equations -->
+      ${line1Svg}
+      ${line2Svg}
+      ${historySvg}
+
+      <!-- Solution intersection -->
+      ${
+        showLine2
+          ? `
+        <circle cx="${ix}" cy="${iy}" r="11" fill="#fef3c7" opacity="0.8" />
+        <circle cx="${ix}" cy="${iy}" r="5.5" fill="#f59e0b" stroke="#78350f" stroke-width="2" />
+        ${
+          !testPoint
+            ? `
+          <rect x="${Math.min(width - 110, ix + 10)}" y="${Math.max(12, iy - 26)}" width="98" height="22" rx="6" fill="#78350f" />
+          <text x="${Math.min(width - 110, ix + 10) + 49}" y="${Math.max(12, iy - 26) + 15}" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">交點 (${formatCoeff(trueX)}, ${formatCoeff(trueY)})</text>
+        `
+            : ''
+        }
+      `
+          : ''
+      }
+
+      ${probeSvg}
+
+      <!-- Legend -->
+      <rect x="${pad.left + 8}" y="${pad.top + 6}" width="176" height="${showLine2 ? 38 : 22}" rx="6" fill="rgba(255,255,255,0.92)" stroke="#e2e8f0" />
+      <line x1="${pad.left + 16}" y1="${pad.top + 17}" x2="${pad.left + 32}" y2="${pad.top + 17}" stroke="#4f46e5" stroke-width="3" />
+      <text x="${pad.left + 37}" y="${pad.top + 21}" font-size="10.5" font-weight="700" fill="#312e81">① ${eq1Label}</text>
+      ${
+        showLine2
+          ? `
+        <line x1="${pad.left + 16}" y1="${pad.top + 34}" x2="${pad.left + 32}" y2="${pad.top + 34}" stroke="#10b981" stroke-width="3" />
+        <text x="${pad.left + 37}" y="${pad.top + 38}" font-size="10.5" font-weight="700" fill="#065f46">② ${eq2Label}</text>
+      `
+          : ''
+      }
+    </svg>
+  `;
+}
+
+function chooseNiceBound(rawMax) {
+  const safe = Math.max(4, rawMax);
+  const mag = 10 ** Math.floor(Math.log10(safe));
+  const norm = safe / mag;
+  let nice;
+  if (norm <= 1.2) nice = 1.2;
+  else if (norm <= 1.5) nice = 1.5;
+  else if (norm <= 2) nice = 2;
+  else if (norm <= 3) nice = 3;
+  else if (norm <= 4) nice = 4;
+  else if (norm <= 5) nice = 5;
+  else if (norm <= 6) nice = 6;
+  else if (norm <= 8) nice = 8;
+  else nice = 10;
+  return Math.ceil(nice * mag);
+}
+
+return { renderCoordinateGraphSVG };
+})();
+
+// === Module: ./src/ui/sandboxView.js ===
+const __mod_sandboxView = (() => {
+const { evaluateScaleTilt } = __mod_equationEngine;
+const { renderCoordinateGraphSVG } = __mod_graphRenderer;
+const { renderScaleSVG } = __mod_scaleRenderer;
+
+const SANDBOX_PRESETS = [
+  {
+    id: 'farm',
+    title: '農場雞兔（10 顆頭、28 隻腳）',
+    clue1Text: '① 雞 (x) 與兔 (y) 共 10 隻：x + y = 10',
+    clue2Text: '② 總腳數 28 隻：2x + 4y = 28',
+    scale1: { left: { x: 1, y: 1, c: 0 }, right: { x: 0, y: 0, c: 10 } },
+    scale2: { left: { x: 2, y: 4, c: 0 }, right: { x: 0, y: 0, c: 28 } },
+    eq1: { a: 1, b: 1, c: 10 },
+    eq2: { a: 2, b: 4, c: 28 },
+    solution: { u0: 6, u1: 4 },
+    maxX: 12,
+    maxY: 12,
+    varMeta: {
+      x: { label: '雞隻數', unit: '隻', icon: '🐔' },
+      y: { label: '兔隻數', unit: '隻', icon: '🐰' },
+    },
+    quickPairs: [
+      [2, 8],
+      [4, 6],
+      [6, 4],
+      [8, 2],
+    ],
+  },
+  {
+    id: 'boba',
+    title: '夜市點餐（共 8 份、460 元）',
+    clue1Text: '① 珍奶 (x) 與雞排 (y) 共 8 份：x + y = 8',
+    clue2Text: '② 50元珍奶 + 70元雞排 = 460：50x + 70y = 460',
+    scale1: { left: { x: 1, y: 1, c: 0 }, right: { x: 0, y: 0, c: 8 } },
+    scale2: { left: { x: 50, y: 70, c: 0 }, right: { x: 0, y: 0, c: 460 } },
+    eq1: { a: 1, b: 1, c: 8 },
+    eq2: { a: 50, b: 70, c: 460 },
+    solution: { u0: 5, u1: 3 },
+    maxX: 10,
+    maxY: 10,
+    varMeta: {
+      x: { label: '珍奶杯數', unit: '杯', icon: '🧋' },
+      y: { label: '雞排份數', unit: '份', icon: '🍗' },
+    },
+    quickPairs: [
+      [1, 7],
+      [4, 4],
+      [5, 3],
+      [7, 1],
+    ],
+  },
+];
+
+function createSandboxState() {
+  return {
+    presetIndex: 0,
+    testX: 2,
+    testY: 8,
+    enableScale2: false,
+    discoveredLine1Dots: [{ x: 2, y: 8 }],
+  };
+}
+
+function renderSandboxHTML(sbState) {
+  const preset = SANDBOX_PRESETS[sbState.presetIndex];
+  const tilt1 = evaluateScaleTilt(preset.scale1, sbState.testX, sbState.testY);
+  const tilt2 = evaluateScaleTilt(preset.scale2, sbState.testX, sbState.testY);
+
+  const bothOk = tilt1.isBalanced && sbState.enableScale2 && tilt2.isBalanced;
+
+  let insightText = '';
+  if (!sbState.enableScale2) {
+    if (tilt1.isBalanced) {
+      insightText = `🎯 (${sbState.testX}, ${sbState.testY}) 讓天平 ① 平衡了！但試試別的組合（例如 (4,6)、(6,4)、(8,2)）— 只有一條式子時，有「無限多組解」排成一條直線，猜不出唯一答案！`;
+    } else {
+      insightText = `現在左盤 = ${tilt1.leftVal}、右盤 = ${tilt1.rightVal}，天平 ① 歪了！拉動滑桿讓 ${preset.varMeta.x.label} + ${preset.varMeta.y.label} 等於右盤試試看。`;
+    }
+  } else {
+    if (bothOk) {
+      insightText = `🏆 找到唯一交點 (${sbState.testX}, ${sbState.testY})！只有這一個組合能同時讓天平 ① 和天平 ② 兩邊都平穩！這就是「兩條線索交出唯一解」的秘密！`;
+    } else if (tilt1.isBalanced && !tilt2.isBalanced) {
+      insightText = `⚡ 看！(${sbState.testX}, ${sbState.testY}) 雖然通過了天平 ①，卻讓天平 ② 歪掉（左盤 ${tilt2.leftVal} ≠ 右盤 ${tilt2.rightVal}）！快滑動尋找兩座同時平衡的唯一點！`;
+    } else if (!tilt1.isBalanced && tilt2.isBalanced) {
+      insightText = `⚡ (${sbState.testX}, ${sbState.testY}) 只符合天平 ②，但不符合天平 ①（左盤 ${tilt1.leftVal} ≠ 右盤 ${tilt1.rightVal}）！`;
+    } else {
+      insightText = `兩座天平都還沒平衡喔！觀察右邊座標平面上的兩條直線交點吧！`;
+    }
+  }
+
+  return `
+    <section class="sandbox-panel" aria-labelledby="sandbox-title">
+      <div class="panel-header-row">
+        <div>
+          <h2 id="sandbox-title">🔬 為什麼需要「兩條式子」？雙天平直覺沙盒</h2>
+          <p class="muted-note">先只看 1 座天平，體驗「一式無限解」；再開啟天平 ②，見證「兩式鎖定唯一交點」！</p>
+        </div>
+        <div class="preset-switcher" role="group" aria-label="沙盒題目切換">
+          ${SANDBOX_PRESETS.map(
+            (p, idx) => `
+            <button type="button" class="pill-btn ${idx === sbState.presetIndex ? 'is-active' : ''}" data-sb-preset="${idx}">
+              ${p.title.split('（')[0]}
+            </button>
+          `
+          ).join('')}
+        </div>
+      </div>
+
+      <div class="sandbox-controls-bar">
+        <div class="slider-group">
+          <label for="sb-x-range">
+            <span class="var-badge var-x">x ${preset.varMeta.x.icon} ${preset.varMeta.x.label}</span>：<strong>${sbState.testX}</strong> ${preset.varMeta.x.unit}
+          </label>
+          <input id="sb-x-range" type="range" min="0" max="${preset.maxX}" step="1" value="${sbState.testX}" data-sb-slider="x" />
+        </div>
+        <div class="slider-group">
+          <label for="sb-y-range">
+            <span class="var-badge var-y">y ${preset.varMeta.y.icon} ${preset.varMeta.y.label}</span>：<strong>${sbState.testY}</strong> ${preset.varMeta.y.unit}
+          </label>
+          <input id="sb-y-range" type="range" min="0" max="${preset.maxY}" step="1" value="${sbState.testY}" data-sb-slider="y" />
+        </div>
+        <div class="quick-pairs">
+          <span class="quick-label">快速試試：</span>
+          ${preset.quickPairs
+            .map(
+              ([qx, qy]) => `
+            <button type="button" class="chip-btn ${sbState.testX === qx && sbState.testY === qy ? 'is-selected' : ''}" data-sb-pair="${qx},${qy}">
+              (${qx}, ${qy})
+            </button>
+          `
+            )
+            .join('')}
+        </div>
+        <button type="button" class="toggle-scale2-btn ${sbState.enableScale2 ? 'is-on' : ''}" data-sb-toggle-s2 aria-pressed="${sbState.enableScale2}">
+          ${sbState.enableScale2 ? '🔓 天平 ②（第二條線索）已開啟' : '🔒 點此開啟「天平 ②（第二條線索）」'}
+        </button>
+      </div>
+
+      <div class="insight-banner ${bothOk ? 'is-success' : ''}">${insightText}</div>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-scales-col">
+          <div class="scale-card clue-1-card">
+            <div class="scale-card-title">${preset.clue1Text}</div>
+            ${renderScaleSVG({
+              title: '沙盒天平一',
+              scale: preset.scale1,
+              angleDeg: tilt1.angleDeg,
+              status: tilt1.isBalanced ? 'balanced' : 'tilted',
+              varMeta: preset.varMeta,
+              accentColor: '#4f46e5',
+              compact: true,
+            })}
+            <div class="eval-readout">左盤 = ${tilt1.leftVal} ｜ 右盤 = ${tilt1.rightVal}</div>
+          </div>
+
+          <div class="scale-card clue-2-card ${sbState.enableScale2 ? '' : 'is-dimmed'}">
+            <div class="scale-card-title">${preset.clue2Text}</div>
+            ${
+              sbState.enableScale2
+                ? renderScaleSVG({
+                    title: '沙盒天平二',
+                    scale: preset.scale2,
+                    angleDeg: tilt2.angleDeg,
+                    status: tilt2.isBalanced ? 'balanced' : 'tilted',
+                    varMeta: preset.varMeta,
+                    accentColor: '#10b981',
+                    compact: true,
+                  })
+                : `<div class="scale-locked-placeholder">尚未加入第二條線索 — 目前有好多組 (x, y) 都能過關！</div>`
+            }
+            <div class="eval-readout">${sbState.enableScale2 ? `左盤 = ${tilt2.leftVal} ｜ 右盤 = ${tilt2.rightVal}` : '開啟天平 ② 來過濾出唯一解答'}</div>
+          </div>
+        </div>
+
+        <div class="sandbox-graph-col">
+          ${renderCoordinateGraphSVG({
+            eq1: preset.eq1,
+            eq2: preset.eq2,
+            solution: preset.solution,
+            swapped: false,
+            varMeta: preset.varMeta,
+            testPoint: { x: sbState.testX, y: sbState.testY },
+            showLine2: sbState.enableScale2,
+            historyDots: sbState.discoveredLine1Dots,
+          })}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function getSandboxPreset(index) {
+  return SANDBOX_PRESETS[index];
+}
+
+return { createSandboxState, renderSandboxHTML, getSandboxPreset };
+})();
+
+// === Module: ./src/ui/gameController.js ===
+const __mod_gameController = (() => {
+const { playBalanceLock, playClink, playDrop, playError, playPop, playVictory, isMuted, setMuted } = __mod_soundEngine;
+const { generatePracticeLevel, getVarMeta, LEVELS, WORLDS } = __mod_levels;
+const { buildPanTokens, cloneScale, createEmptyScale, EPS, evaluateScaleTilt, formatCanonicalEquation, formatCoeff, formatEquation, normalizeScale, roundClean, verifyLevelAttempt } = __mod_equationEngine;
+const { renderCoordinateGraphSVG } = __mod_graphRenderer;
+const { createSandboxState, getSandboxPreset, renderSandboxHTML } = __mod_sandboxView;
+const { renderScaleSVG, renderTapeDiagramSVG } = __mod_scaleRenderer;
+
+const STORAGE_KEY = 'eq_detective_progress_v1';
+
+/**
+ * Deterministic shuffle based on seed integer so chip positions look natural
+ * without changing randomly on every re-render.
+ */
+function deterministicOrder(items, seed) {
+  const arr = items.map((item, idx) => ({ item, idx }));
+  arr.sort((a, b) => {
+    const ha = ((a.idx + 1) * 37 + seed * 17) % 29;
+    const hb = ((b.idx + 1) * 37 + seed * 17) % 29;
+    return ha - hb;
+  });
+  return arr.map((x) => x.item);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+class GameController {
+  constructor(rootEl, dialogRefs, announceFn) {
+    this.rootEl = rootEl;
+    this.dialogs = dialogRefs;
+    this.announce = announceFn;
+
+    this.progress = this.loadProgress();
+    this.mode = 'campaign'; // 'campaign' | 'sandbox' | 'practice'
+    this.sandbox = createSandboxState();
+    this.practiceCounter = 0;
+    this.challengeSkipGuided = false;
+
+    this.state = null;
+    this.loadLevel(LEVELS[0]);
+    this.bindEvents();
+  }
+
+  loadProgress() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return { stars: parsed.stars || {}, solved: parsed.solved || {} };
+        }
+      }
+    } catch {
+      // Ignore storage failures in private browsing
+    }
+    return { stars: {}, solved: {} };
+  }
+
+  saveProgress(levelId, stars) {
+    if (levelId >= 100) return; // Don't persist procedural ids into campaign map
+    const prev = this.progress.stars[levelId] || 0;
+    this.progress.stars[levelId] = Math.max(prev, stars);
+    this.progress.solved[levelId] = true;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
+    } catch {
+      // Safe no-op
+    }
+  }
+
+  getTotalStars() {
+    return Object.values(this.progress.stars).reduce((acc, s) => acc + (s || 0), 0);
+  }
+
+  loadLevel(level) {
+    const startAtStep3 = this.challengeSkipGuided && !level.isProcedural;
+    this.state = {
+      level,
+      step: startAtStep3 ? 3 : 1,
+      // Step 1
+      activeVarSlot: 'x', // 'x' | 'y'
+      xAssignedId: startAtStep3 ? 'u0' : null,
+      yAssignedId: startAtStep3 ? 'u1' : null,
+      step1Feedback: null, // { type: 'ok' | 'err', text: string }
+      // Step 2
+      activeClueSlot: 0, // 0 | 1
+      assignedClueOrder: startAtStep3 ? [0, 1] : [null, null],
+      step2Feedback: null,
+      // Step 3
+      scales: [createEmptyScale(), createEmptyScale()],
+      activePan: ['left', 'left'], // active pan per scale ('left' | 'right')
+      selectedMagnetIdx: 0,
+      showTapeDiagram: [false, false],
+      showExpansionHint: [false, false],
+      hintTier: 0,
+      retries: 0,
+      lastCheck: null, // result of verifyLevelAttempt
+      // Step 4
+      testX: level.solution.u0,
+      testY: level.solution.u1,
+      earnedStars: 3,
+    };
+    this.lastActiveScaleIdx = 0;
+    this.render();
+  }
+
+  isSwapped() {
+    const { xAssignedId, yAssignedId } = this.state;
+    return xAssignedId === 'u1' && yAssignedId === 'u0';
+  }
+
+  render() {
+    this.renderHeaderBadges();
+    if (this.mode === 'sandbox') {
+      this.rootEl.innerHTML = renderSandboxHTML(this.sandbox);
+      return;
+    }
+
+    const { level, step } = this.state;
+    const swapped = this.isSwapped();
+    const vm = getVarMeta(level, swapped);
+
+    this.rootEl.innerHTML = `
+      ${this.renderModeAndStepperBar(level, step)}
+      <div class="workbench-shell">
+        ${this.renderStoryCard(level, step, vm)}
+        <div class="stage-workspace">
+          ${step === 1 ? this.renderStep1(level) : ''}
+          ${step === 2 ? this.renderStep2(level, vm) : ''}
+          ${step === 3 ? this.renderStep3(level, vm, swapped) : ''}
+          ${step === 4 ? this.renderStep4(level, vm, swapped) : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  renderHeaderBadges() {
+    const starEl = document.getElementById('hud-total-stars');
+    const levelBtn = document.getElementById('btn-open-map');
+    const soundBtn = document.getElementById('btn-toggle-sound');
+    const navCampaign = document.getElementById('nav-campaign');
+    const navSandbox = document.getElementById('nav-sandbox');
+    const navPractice = document.getElementById('nav-practice');
+
+    if (starEl) {
+      starEl.textContent = `⭐ ${this.getTotalStars()} / ${LEVELS.length * 3}`;
+    }
+    if (levelBtn) {
+      levelBtn.textContent =
+        this.mode === 'campaign'
+          ? `🗺️ 第 ${this.state.level.id} 關：${this.state.level.title}`
+          : '🗺️ 關卡地圖';
+    }
+    if (soundBtn) {
+      soundBtn.textContent = isMuted() ? '🔇 靜音' : '🔊 音效';
+      soundBtn.setAttribute('aria-pressed', String(!isMuted()));
+    }
+    if (navCampaign) navCampaign.classList.toggle('is-active', this.mode === 'campaign');
+    if (navSandbox) navSandbox.classList.toggle('is-active', this.mode === 'sandbox');
+    if (navPractice) navPractice.classList.toggle('is-active', this.mode === 'practice');
+  }
+
+  renderModeAndStepperBar(level, step) {
+    const world = WORLDS.find((w) => w.id === level.worldId);
+    const steps = [
+      { n: 1, label: '設未知數 x, y' },
+      { n: 2, label: '抓兩條線索' },
+      { n: 3, label: '雙天平列式' },
+      { n: 4, label: '交點驗算破關' },
+    ];
+    const step1Done = Boolean(this.state.xAssignedId && this.state.yAssignedId);
+    const step2Done =
+      this.state.assignedClueOrder[0] !== null && this.state.assignedClueOrder[1] !== null;
+    const step3Done = Boolean(this.state.lastCheck?.passed);
+
+    const canJumpTo = (n) => {
+      if (n === 1) return true;
+      if (n === 2) return step1Done;
+      if (n === 3) return step1Done && step2Done;
+      if (n === 4) return step1Done && step2Done && step3Done;
+      return false;
+    };
+
+    return `
+      <div class="level-top-bar">
+        <div class="level-title-group">
+          <span class="world-pill" style="--world-color: ${world ? world.color : '#6366f1'}">${world ? `World ${world.id}・${world.name}` : '無限練習場'}</span>
+          <span class="badge-pill">${escapeHtml(level.badge)}</span>
+          ${
+            level.isProcedural
+              ? `<button type="button" class="pill-btn" data-action="new-practice">🎲 換一題隨機練習</button>`
+              : `<label class="challenge-toggle">
+                  <input type="checkbox" data-action="toggle-challenge" ${this.challengeSkipGuided ? 'checked' : ''} />
+                  <span>熟手跳過引導 (直接列式)</span>
+                </label>`
+          }
+        </div>
+        <nav class="stepper" aria-label="解題四步驟">
+          ${steps
+            .map((s) => {
+              const isCurrent = s.n === step;
+              const unlocked = canJumpTo(s.n);
+              const done = s.n < step || (s.n === 4 && step === 4);
+              return `
+                <button type="button"
+                  class="step-pill ${isCurrent ? 'is-current' : ''} ${done ? 'is-done' : ''}"
+                  data-jump-step="${s.n}"
+                  ${unlocked ? '' : 'disabled'}
+                  aria-current="${isCurrent ? 'step' : 'false'}">
+                  <span class="step-num">${done && !isCurrent ? '✓' : s.n}</span>
+                  <span class="step-text">${s.label}</span>
+                </button>
+              `;
+            })
+            .join('')}
+        </nav>
+      </div>
+    `;
+  }
+
+  renderStoryCard(level, step, vm) {
+    const order = this.state.assignedClueOrder;
+    const segmentsHtml = level.storySegments
+      .map((seg) => {
+        if (seg.kind === 'plain') {
+          return `<span>${escapeHtml(seg.text)}</span>`;
+        }
+        if (seg.kind === 'question') {
+          const highlightQ = step === 1 ? 'story-hl-question' : '';
+          return `<span class="story-seg ${highlightQ}">${escapeHtml(seg.text)}</span>`;
+        }
+        // clue segment
+        let cls = '';
+        if (step >= 2) {
+          if (order[0] === seg.clueIndex) cls = 'story-hl-clue1';
+          else if (order[1] === seg.clueIndex) cls = 'story-hl-clue2';
+        }
+        return `<span class="story-seg ${cls}">${escapeHtml(seg.text)}</span>`;
+      })
+      .join('');
+
+    const step1Ready = Boolean(this.state.xAssignedId && this.state.yAssignedId);
+
+    return `
+      <section class="story-card" aria-labelledby="story-heading">
+        <div class="story-card-header">
+          <h2 id="story-heading">📖 ${escapeHtml(level.title)}</h2>
+          ${
+            step1Ready
+              ? `<div class="var-legend" aria-label="目前已設定的未知數">
+                  <span class="var-badge var-x">x = ${vm.x.icon} ${escapeHtml(vm.x.label)}${vm.x.unit ? ` (${vm.x.unit})` : ''}</span>
+                  <span class="var-badge var-y">y = ${vm.y.icon} ${escapeHtml(vm.y.label)}${vm.y.unit ? ` (${vm.y.unit})` : ''}</span>
+                  ${step <= 3 ? `<button type="button" class="mini-swap-btn" data-action="swap-xy" title="對調 x 與 y 的定義">🔄 互換 x / y</button>` : ''}
+                </div>`
+              : `<span class="var-legend-pending">🕵️ 先從題目找出「兩個不知道的數量」吧！</span>`
+          }
+        </div>
+        <p class="story-text">${segmentsHtml}</p>
+      </section>
+    `;
+  }
+
+  // ==================== STEP 1: 設未知數 ====================
+  renderStep1(level) {
+    const { activeVarSlot, xAssignedId, yAssignedId, step1Feedback } = this.state;
+
+    const candidates = deterministicOrder(
+      [
+        ...level.unknowns.map((u) => ({
+          kind: 'unknown',
+          id: u.id,
+          icon: u.icon,
+          chipText: u.chipText,
+          label: u.label,
+        })),
+        ...level.unknownDistractors.map((d) => ({
+          kind: 'distractor',
+          id: d.id,
+          icon: '🔢',
+          chipText: d.chipText,
+          reason: d.reason,
+        })),
+      ],
+      level.id * 13 + 7
+    );
+
+    const getAssignedMeta = (id) => level.unknowns.find((u) => u.id === id);
+    const xMeta = getAssignedMeta(xAssignedId);
+    const yMeta = getAssignedMeta(yAssignedId);
+    const bothReady = Boolean(xMeta && yMeta);
+
+    return `
+      <section class="step-panel" aria-labelledby="step1-title">
+        <div class="step-header">
+          <h3 id="step1-title">第 1 步：設兩個未知數（x 和 y 誰先設都可以！）</h3>
+          <p class="muted-note">點選下方的一個未知數框（或拖曳詞條），從題目裡找出兩個「不知道、需要求出來」的量放進 x 與 y。</p>
+        </div>
+
+        <div class="mystery-boxes-row">
+          <div class="mystery-slot slot-x ${activeVarSlot === 'x' ? 'is-targeted' : ''} ${xMeta ? 'is-filled' : ''}"
+               data-drop-var="x">
+            <button type="button" class="slot-select-btn" data-select-var-slot="x" aria-pressed="${activeVarSlot === 'x'}">
+              <span class="slot-tag var-x">未知數 x</span>
+              ${
+                xMeta
+                  ? `<span class="slot-filled-val">${xMeta.icon} ${escapeHtml(xMeta.label)}</span>`
+                  : `<span class="slot-empty-hint">${activeVarSlot === 'x' ? '👇 點選下方名詞卡片放入 x' : '點擊選取 x 框'}</span>`
+              }
+            </button>
+            ${xMeta ? `<button type="button" class="slot-clear-btn" data-clear-var="x" aria-label="清除 x">✕</button>` : ''}
+          </div>
+
+          <div class="mystery-slot slot-y ${activeVarSlot === 'y' ? 'is-targeted' : ''} ${yMeta ? 'is-filled' : ''}"
+               data-drop-var="y">
+            <button type="button" class="slot-select-btn" data-select-var-slot="y" aria-pressed="${activeVarSlot === 'y'}">
+              <span class="slot-tag var-y">未知數 y</span>
+              ${
+                yMeta
+                  ? `<span class="slot-filled-val">${yMeta.icon} ${escapeHtml(yMeta.label)}</span>`
+                  : `<span class="slot-empty-hint">${activeVarSlot === 'y' ? '👇 點選下方名詞卡片放入 y' : '點擊選取 y 框'}</span>`
+              }
+            </button>
+            ${yMeta ? `<button type="button" class="slot-clear-btn" data-clear-var="y" aria-label="清除 y">✕</button>` : ''}
+          </div>
+        </div>
+
+        <div class="chip-tray" role="group" aria-label="題目名詞候選卡片">
+          ${candidates
+            .map((c) => {
+              const usedInX = c.kind === 'unknown' && xAssignedId === c.id;
+              const usedInY = c.kind === 'unknown' && yAssignedId === c.id;
+              const isUsed = usedInX || usedInY;
+              return `
+                <button type="button"
+                  class="word-chip ${isUsed ? 'is-used' : ''}"
+                  draggable="${!isUsed}"
+                  data-drag-kind="var-candidate"
+                  data-candidate-kind="${c.kind}"
+                  data-candidate-id="${c.id}"
+                  ${isUsed ? 'disabled' : ''}>
+                  <span aria-hidden="true">${c.icon}</span>
+                  <span>${escapeHtml(c.chipText)}</span>
+                  ${usedInX ? '<span class="mini-tag var-x">已設為 x</span>' : ''}
+                  ${usedInY ? '<span class="mini-tag var-y">已設為 y</span>' : ''}
+                </button>
+              `;
+            })
+            .join('')}
+        </div>
+
+        ${
+          step1Feedback
+            ? `<div class="feedback-box ${step1Feedback.type === 'ok' ? 'is-ok' : 'is-err'}">${escapeHtml(step1Feedback.text)}</div>`
+            : ''
+        }
+
+        <div class="step-actions">
+          ${
+            bothReady
+              ? `<button type="button" class="primary-btn" data-action="goto-step-2">
+                  ✅ 太好了！進入第 2 步：抓兩條線索 ➜
+                </button>`
+              : `<span class="hint-inline">💡 提示：兩個框都要放入真正的未知數才能繼續喔！</span>`
+          }
+        </div>
+      </section>
+    `;
+  }
+
+  // ==================== STEP 2: 抓兩條線索 ====================
+  renderStep2(level, vm) {
+    const { activeClueSlot, assignedClueOrder, step2Feedback } = this.state;
+
+    const clueCards = deterministicOrder(
+      [
+        { kind: 'clue', index: 0, text: level.clues[0].text },
+        { kind: 'clue', index: 1, text: level.clues[1].text },
+        { kind: 'distractor', index: -1, text: level.clueDistractor.text, reason: level.clueDistractor.reason },
+      ],
+      level.id * 29 + 5
+    );
+
+    const clueInSlot0 = assignedClueOrder[0] !== null ? level.clues[assignedClueOrder[0]] : null;
+    const clueInSlot1 = assignedClueOrder[1] !== null ? level.clues[assignedClueOrder[1]] : null;
+    const bothCluesReady = Boolean(clueInSlot0 && clueInSlot1);
+
+    return `
+      <section class="step-panel" aria-labelledby="step2-title">
+        <div class="step-header">
+          <h3 id="step2-title">第 2 步：找出題目裡的「兩條等量線索」</h3>
+          <p class="muted-note">兩個未知數 (${vm.x.icon} x 與 ${vm.y.icon} y) 需要兩句不同的條件才能解出來！請把題目裡包含數字關係的兩句話放進對應線索框。</p>
+        </div>
+
+        <div class="clue-slots-grid">
+          <div class="clue-slot clue-slot-1 ${activeClueSlot === 0 ? 'is-targeted' : ''} ${clueInSlot0 ? 'is-filled' : ''}"
+               data-drop-clue="0">
+            <button type="button" class="slot-select-btn" data-select-clue-slot="0" aria-pressed="${activeClueSlot === 0}">
+              <span class="slot-tag clue-1-tag">⚖️ 線索 ①（給天平一）</span>
+              ${
+                clueInSlot0
+                  ? `<span class="clue-filled-text">${escapeHtml(clueInSlot0.text)}</span>`
+                  : `<span class="slot-empty-hint">點擊下方有數學條件的句子放入線索 ①</span>`
+              }
+            </button>
+            ${clueInSlot0 ? `<button type="button" class="slot-clear-btn" data-clear-clue="0" aria-label="清除線索一">✕</button>` : ''}
+          </div>
+
+          <div class="clue-slot clue-slot-2 ${activeClueSlot === 1 ? 'is-targeted' : ''} ${clueInSlot1 ? 'is-filled' : ''}"
+               data-drop-clue="1">
+            <button type="button" class="slot-select-btn" data-select-clue-slot="1" aria-pressed="${activeClueSlot === 1}">
+              <span class="slot-tag clue-2-tag">⚖️ 線索 ②（給天平二）</span>
+              ${
+                clueInSlot1
+                  ? `<span class="clue-filled-text">${escapeHtml(clueInSlot1.text)}</span>`
+                  : `<span class="slot-empty-hint">點擊下方另一句數學條件放入線索 ②</span>`
+              }
+            </button>
+            ${clueInSlot1 ? `<button type="button" class="slot-clear-btn" data-clear-clue="1" aria-label="清除線索二">✕</button>` : ''}
+          </div>
+        </div>
+
+        <div class="clue-candidates-list" role="group" aria-label="題目句子卡片">
+          ${clueCards
+            .map((card) => {
+              const in0 = card.kind === 'clue' && assignedClueOrder[0] === card.index;
+              const in1 = card.kind === 'clue' && assignedClueOrder[1] === card.index;
+              const used = in0 || in1;
+              return `
+                <button type="button"
+                  class="clue-sentence-btn ${used ? 'is-used' : ''}"
+                  draggable="${!used}"
+                  data-drag-kind="clue-candidate"
+                  data-clue-kind="${card.kind}"
+                  data-clue-idx="${card.index}"
+                  ${used ? 'disabled' : ''}>
+                  <span class="quote-mark" aria-hidden="true">💬</span>
+                  <span>「${escapeHtml(card.text)}」</span>
+                  ${in0 ? '<span class="mini-tag clue-1-tag">已放線索 ①</span>' : ''}
+                  ${in1 ? '<span class="mini-tag clue-2-tag">已放線索 ②</span>' : ''}
+                </button>
+              `;
+            })
+            .join('')}
+        </div>
+
+        ${
+          step2Feedback
+            ? `<div class="feedback-box ${step2Feedback.type === 'ok' ? 'is-ok' : 'is-err'}">${escapeHtml(step2Feedback.text)}</div>`
+            : ''
+        }
+
+        <div class="step-actions">
+          <button type="button" class="secondary-btn" data-jump-step="1">⬅ 修改未知數</button>
+          ${
+            bothCluesReady
+              ? `<button type="button" class="primary-btn" data-action="goto-step-3">
+                  ⚖️ 抓到雙線索了！前往第 3 步：雙天平列式 ➜
+                </button>`
+              : ''
+          }
+        </div>
+      </section>
+    `;
+  }
+
+  // ==================== STEP 3: 雙天平圖像列式 ====================
+  renderStep3(level, vm, swapped) {
+    const {
+      scales,
+      activePan,
+      assignedClueOrder,
+      selectedMagnetIdx,
+      showTapeDiagram,
+      showExpansionHint,
+      hintTier,
+      lastCheck,
+    } = this.state;
+
+    const clue1 = level.clues[assignedClueOrder[0] ?? 0];
+    const clue2 = level.clues[assignedClueOrder[1] ?? 1];
+    const selectedMagnet = level.numberChips[selectedMagnetIdx] || level.numberChips[0];
+
+    const hintTexts = level.hints(swapped);
+    const visibleHints = hintTexts.slice(0, hintTier);
+
+    return `
+      <section class="step-panel step3-panel" aria-labelledby="step3-title">
+        <div class="step-header-compact">
+          <div>
+            <h3 id="step3-title">第 3 步：把兩條線索放上「雙天平」寫出方程式！</h3>
+            <p class="muted-note">點選天平的<strong>左盤</strong>或<strong>右盤</strong>，放入 x、y 與下方的題目數字磁鐵。左盤與右盤相等時天平就平衡！</p>
+          </div>
+          <button type="button" class="hint-btn" data-action="next-hint" ${hintTier >= 3 ? 'disabled' : ''}>
+            💡 偵探提示 (${hintTier}/3)
+          </button>
+        </div>
+
+        <!-- Story Number Magnet Bank -->
+        <div class="magnet-dock" aria-label="題目數字磁鐵盤">
+          <div class="magnet-chips-row">
+            <span class="dock-label">🧲 題目數字磁鐵：</span>
+            ${level.numberChips
+              .map(
+                (chip, idx) => `
+              <button type="button"
+                class="magnet-chip ${idx === selectedMagnetIdx ? 'is-selected' : ''}"
+                draggable="true"
+                data-drag-kind="magnet"
+                data-magnet-idx="${idx}"
+                data-select-magnet="${idx}"
+                aria-pressed="${idx === selectedMagnetIdx}">
+                <strong>${escapeHtml(chip.label)}</strong>
+                ${chip.note ? `<span class="magnet-note">${escapeHtml(chip.note)}</span>` : ''}
+              </button>
+            `
+              )
+              .join('')}
+          </div>
+          ${
+            selectedMagnet
+              ? (() => {
+                  const tScale = this.lastActiveScaleIdx ?? 0;
+                  const tPan = activePan[tScale] === 'left' ? '左盤' : '右盤';
+                  return `<div class="magnet-action-strip" role="group" aria-label="快速套用所選數字磁鐵">
+                    <span class="strip-title">將磁鐵 <strong>${escapeHtml(selectedMagnet.label)}</strong> 放入
+                      <button type="button" class="mini-target-btn ${tScale === 0 ? 'is-active' : ''}" data-target-scale="0">天平 ①</button>
+                      <button type="button" class="mini-target-btn ${tScale === 1 ? 'is-active' : ''}" data-target-scale="1">天平 ②</button>
+                      的 <strong>${tPan}</strong>：
+                    </span>
+                    <div class="strip-btns">
+                      <button type="button" class="apply-btn" data-apply-magnet="add-c">+${selectedMagnet.label} (加常數)</button>
+                      <button type="button" class="apply-btn is-neg" data-apply-magnet="sub-c">−${selectedMagnet.label} (減常數)</button>
+                      <button type="button" class="apply-btn var-x-btn" data-apply-magnet="add-x">+${selectedMagnet.label}x</button>
+                      <button type="button" class="apply-btn var-x-btn is-neg" data-apply-magnet="sub-x">−${selectedMagnet.label}x</button>
+                      <button type="button" class="apply-btn var-y-btn" data-apply-magnet="add-y">+${selectedMagnet.label}y</button>
+                      <button type="button" class="apply-btn var-y-btn is-neg" data-apply-magnet="sub-y">−${selectedMagnet.label}y</button>
+                    </div>
+                  </div>`;
+                })()
+              : ''
+          }
+        </div>
+
+        ${
+          visibleHints.length > 0
+            ? `<div class="hints-drawer" aria-label="偵探提示紀錄">
+                ${visibleHints.map((h, i) => `<div class="hint-item"><strong>💡 提示 ${i + 1}：</strong>${escapeHtml(h)}</div>`).join('')}
+              </div>`
+            : ''
+        }
+
+        ${
+          lastCheck
+            ? `<div class="feedback-box ${lastCheck.passed ? 'is-ok' : 'is-err'}">
+                <div><strong>${lastCheck.passed ? '🎉 驗證成功！' : '🔍 偵探檢驗結果：'}</strong> ${escapeHtml(lastCheck.feedback)}</div>
+                ${
+                  !lastCheck.passed && lastCheck.scale1Diag
+                    ? `<div class="diag-line">• <strong>天平 ①：</strong>${escapeHtml(lastCheck.scale1Diag.message)}</div>`
+                    : ''
+                }
+                ${
+                  !lastCheck.passed && lastCheck.scale2Diag
+                    ? `<div class="diag-line">• <strong>天平 ②：</strong>${escapeHtml(lastCheck.scale2Diag.message)}</div>`
+                    : ''
+                }
+              </div>`
+            : ''
+        }
+
+        <!-- Twin Scales Container (Container Query Responsive) -->
+        <div class="workbench-container">
+          <div class="twin-scales-grid">
+            ${this.renderSingleScaleWorkbench(0, clue1, scales[0], activePan[0], showTapeDiagram[0], showExpansionHint[0], vm, swapped, lastCheck)}
+            ${this.renderSingleScaleWorkbench(1, clue2, scales[1], activePan[1], showTapeDiagram[1], showExpansionHint[1], vm, swapped, lastCheck)}
+          </div>
+        </div>
+
+        <div class="step3-footer-actions">
+          <button type="button" class="secondary-btn" data-jump-step="2">⬅ 重選兩條線索</button>
+          <button type="button" class="check-balance-btn" data-action="verify-scales">
+            ⚖️ 檢驗雙天平是否平衡！
+          </button>
+          ${
+            lastCheck?.passed
+              ? `<button type="button" class="primary-btn" data-action="goto-step-4">
+                  📊 看交點圖與驗算破關 ➜
+                </button>`
+              : ''
+          }
+        </div>
+      </section>
+    `;
+  }
+
+  renderSingleScaleWorkbench(scaleIdx, clue, scale, currentPanSide, showTape, showExp, vm, swapped, lastCheck) {
+    const isOne = scaleIdx === 0;
+    const accent = isOne ? '#4f46e5' : '#10b981';
+    const cardCls = isOne ? 'clue-1-card' : 'clue-2-card';
+
+    let angleDeg = 0;
+    let status = 'idle';
+    if (lastCheck) {
+      const tilt = isOne ? lastCheck.tilt1 : lastCheck.tilt2;
+      const isBal = isOne ? lastCheck.scale1Balanced : lastCheck.scale2Balanced;
+      if (lastCheck.passed) {
+        angleDeg = 0;
+        status = 'balanced';
+      } else if (isBal && lastCheck.matchType !== 'duplicate_clue') {
+        angleDeg = 0;
+        status = 'balanced';
+      } else {
+        angleDeg = tilt.angleDeg;
+        status = tilt.isBalanced ? 'idle' : 'tilted';
+      }
+    }
+
+    return `
+      <article class="scale-workbench-card ${cardCls}" aria-label="天平 ${scaleIdx + 1}">
+        <div class="scale-clue-banner">
+          <div class="clue-banner-top">
+            <span class="slot-tag ${isOne ? 'clue-1-tag' : 'clue-2-tag'}">天平 ${isOne ? '①' : '②'}・${escapeHtml(clue.tag)}</span>
+            <div class="scale-mini-tools">
+              ${
+                clue.expansionHint
+                  ? `<button type="button" class="tiny-tool-btn ${showExp ? 'is-on' : ''}" data-toggle-exp="${scaleIdx}">🧩 展開幫手</button>`
+                  : ''
+              }
+              <button type="button" class="tiny-tool-btn ${showTape ? 'is-on' : ''}" data-toggle-tape="${scaleIdx}">📏 線段圖</button>
+              <button type="button" class="tiny-tool-btn" data-clear-scale="${scaleIdx}">🗑️ 清空</button>
+            </div>
+          </div>
+          <p class="clue-quote">「${escapeHtml(clue.text)}」</p>
+          ${showExp && clue.expansionHint ? `<div class="expansion-callout">${escapeHtml(clue.expansionHint)}</div>` : ''}
+        </div>
+
+        ${renderScaleSVG({
+          title: `天平 ${isOne ? '一' : '二'}`,
+          scale,
+          angleDeg,
+          status,
+          varMeta: vm,
+          accentColor: accent,
+        })}
+
+        ${showTape ? `<div class="tape-wrap">${renderTapeDiagramSVG({ clue, scale, varMeta: vm, swapped })}</div>` : ''}
+
+        <!-- Live Color-Coded Equation Readout -->
+        <div class="live-equation-bar" aria-live="off">
+          <span class="eq-label">目前式子：</span>
+          <span class="eq-formula">${this.renderColorEquationHtml(scale)}</span>
+        </div>
+
+        <!-- Pan Selector Tabs + Dropzones -->
+        <div class="pan-selector-row">
+          <div class="pan-box ${currentPanSide === 'left' ? 'is-active' : ''}" data-drop-pan="${scaleIdx}:left">
+            <button type="button" class="pan-select-header" data-select-pan="${scaleIdx}:left" aria-pressed="${currentPanSide === 'left'}">
+              <span>⬅️ 左盤 ${currentPanSide === 'left' ? '(編輯中)' : ''}</span>
+            </button>
+            <div class="pan-terms-list">
+              ${this.renderPanTermPills(scaleIdx, 'left', scale.left, vm)}
+            </div>
+          </div>
+
+          <div class="pan-equals-divider" aria-hidden="true">=</div>
+
+          <div class="pan-box ${currentPanSide === 'right' ? 'is-active' : ''}" data-drop-pan="${scaleIdx}:right">
+            <button type="button" class="pan-select-header" data-select-pan="${scaleIdx}:right" aria-pressed="${currentPanSide === 'right'}">
+              <span>➡️ 右盤 ${currentPanSide === 'right' ? '(編輯中)' : ''}</span>
+            </button>
+            <div class="pan-terms-list">
+              ${this.renderPanTermPills(scaleIdx, 'right', scale.right, vm)}
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Add Toolbar targeting active pan -->
+        <div class="quick-add-bar" role="group" aria-label="加入砝碼到目前選取的天平盤">
+          <button type="button" class="token-add-btn var-x-btn" data-pan-add="${scaleIdx}:x:1">+1 x (${vm.x.icon})</button>
+          <button type="button" class="token-add-btn var-x-btn is-neg" data-pan-add="${scaleIdx}:x:-1">−1 x</button>
+          <button type="button" class="token-add-btn var-y-btn" data-pan-add="${scaleIdx}:y:1">+1 y (${vm.y.icon})</button>
+          <button type="button" class="token-add-btn var-y-btn is-neg" data-pan-add="${scaleIdx}:y:-1">−1 y</button>
+          <form class="custom-num-form" data-custom-num-form="${scaleIdx}">
+            <label class="visually-hidden" for="custom-num-${scaleIdx}">自訂數字</label>
+            <input id="custom-num-${scaleIdx}" type="number" step="any" placeholder="自訂數字" class="custom-num-input" />
+            <button type="submit" class="token-add-btn" data-custom-sign="1">+</button>
+            <button type="button" class="token-add-btn is-neg" data-custom-sub="${scaleIdx}">−</button>
+          </form>
+        </div>
+      </article>
+    `;
+  }
+
+  renderPanTermPills(scaleIdx, side, pan, vm) {
+    const kinds = [
+      { key: 'x', val: pan.x, icon: vm.x.icon, cls: 'pill-x' },
+      { key: 'y', val: pan.y, icon: vm.y.icon, cls: 'pill-y' },
+      { key: 'c', val: pan.c, icon: '⚖️', cls: 'pill-c' },
+    ].filter((item) => Math.abs(item.val) >= EPS);
+
+    if (kinds.length === 0) {
+      return `<span class="pan-empty-label">空盤 (0) — 點擊按鈕或拖曳磁鐵至此</span>`;
+    }
+
+    return kinds
+      .map((item) => {
+        const displayVal =
+          item.key === 'c'
+            ? formatCoeff(item.val)
+            : `${Math.abs(item.val - 1) < EPS ? '' : Math.abs(item.val + 1) < EPS ? '−' : formatCoeff(item.val)}${item.key}`;
+        return `
+          <div class="term-pill ${item.cls} ${item.val < 0 ? 'is-negative' : ''}">
+            <span class="term-label">${item.icon} ${escapeHtml(displayVal)}</span>
+            <div class="term-controls">
+              <button type="button" class="term-ctrl-btn" data-term-delta="${scaleIdx}:${side}:${item.key}:-1" aria-label="${item.key} 減 1">−1</button>
+              <button type="button" class="term-ctrl-btn" data-term-delta="${scaleIdx}:${side}:${item.key}:1" aria-label="${item.key} 加 1">+1</button>
+              <button type="button" class="term-ctrl-btn" data-term-flip="${scaleIdx}:${side}:${item.key}" aria-label="${item.key} 正負反轉">±</button>
+              <button type="button" class="term-ctrl-btn is-del" data-term-clear="${scaleIdx}:${side}:${item.key}" aria-label="移除 ${item.key}">✕</button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  renderColorEquationHtml(scale) {
+    const renderSide = (pan) => {
+      const toks = buildPanTokens(pan);
+      return toks
+        .map((t) => {
+          if (t.kind === 'x') return `<span class="eq-tok-x">${escapeHtml(t.text)}</span>`;
+          if (t.kind === 'y') return `<span class="eq-tok-y">${escapeHtml(t.text)}</span>`;
+          if (t.kind === 'c') return `<span class="eq-tok-c">${escapeHtml(t.text)}</span>`;
+          return `<span>${escapeHtml(t.text)}</span>`;
+        })
+        .join('');
+    };
+    return `${renderSide(scale.left)} <span class="eq-eq">=</span> ${renderSide(scale.right)}`;
+  }
+
+  // ==================== STEP 4: 交點驗算與破關 ====================
+  renderStep4(level, vm, swapped) {
+    const { scales, testX, testY, earnedStars } = this.state;
+    const eq1 = normalizeScale(scales[0], swapped);
+    const eq2 = normalizeScale(scales[1], swapped);
+
+    const trueX = vm.xVal;
+    const trueY = vm.yVal;
+    const maxSliderX = Math.max(12, Math.ceil(trueX * 1.5));
+    const maxSliderY = Math.max(12, Math.ceil(trueY * 1.5));
+    const stepSizeX = Number.isInteger(trueX) ? 1 : 0.5;
+    const stepSizeY = Number.isInteger(trueY) ? 1 : 0.5;
+
+    const tilt1 = evaluateScaleTilt(scales[0], testX, testY);
+    const tilt2 = evaluateScaleTilt(scales[1], testX, testY);
+    const bothBalancedAtTest = tilt1.isBalanced && tilt2.isBalanced;
+
+    const solvingSteps = level.solvingSteps(swapped);
+    const hasNext = !level.isProcedural && level.id < LEVELS.length;
+
+    return `
+      <section class="step-panel step4-panel" aria-labelledby="step4-title">
+        <div class="victory-banner">
+          <div>
+            <h3 id="step4-title">🏆 列式大成功！看見兩條方程式的交點</h3>
+            <p class="muted-note">你剛才親手打造的聯立方程式，在座標平面上畫出兩條直線，唯一交點就是答案！</p>
+          </div>
+          <div class="stars-badge" aria-label="獲得 ${earnedStars} 顆星">
+            ${'⭐'.repeat(earnedStars)}${'☆'.repeat(3 - earnedStars)}
+          </div>
+        </div>
+
+        <div class="system-summary-card">
+          <div class="curly-brace" aria-hidden="true">{</div>
+          <div class="system-lines">
+            <div class="sys-line"><span class="slot-tag clue-1-tag">①</span> <strong>${escapeHtml(formatEquation(scales[0]))}</strong> <span class="canon-note">（化簡：${escapeHtml(formatCanonicalEquation(eq1, swapped))}）</span></div>
+            <div class="sys-line"><span class="slot-tag clue-2-tag">②</span> <strong>${escapeHtml(formatEquation(scales[1]))}</strong> <span class="canon-note">（化簡：${escapeHtml(formatCanonicalEquation(eq2, swapped))}）</span></div>
+          </div>
+          <div class="solution-answer-box">
+            <div><span class="var-badge var-x">x = ${formatCoeff(trueX)} ${vm.x.unit}</span></div>
+            <div><span class="var-badge var-y">y = ${formatCoeff(trueY)} ${vm.y.unit}</span></div>
+          </div>
+        </div>
+
+        <div class="step4-visual-grid">
+          <div class="step4-graph-card">
+            ${renderCoordinateGraphSVG({
+              eq1,
+              eq2,
+              solution: level.solution,
+              swapped,
+              varMeta: vm,
+              testPoint: { x: testX, y: testY },
+              showLine2: true,
+            })}
+          </div>
+
+          <div class="step4-sliders-card">
+            <h4>🎛️ 即時驗算實驗台：拉動看看為什麼只有唯一解！</h4>
+            <div class="slider-group">
+              <label for="s4-x-range"><span class="var-badge var-x">x ${vm.x.icon} ${escapeHtml(vm.x.label)}</span>：<strong>${formatCoeff(testX)}</strong> ${vm.x.unit}</label>
+              <input id="s4-x-range" type="range" min="0" max="${maxSliderX}" step="${stepSizeX}" value="${testX}" data-s4-slider="x" />
+            </div>
+            <div class="slider-group">
+              <label for="s4-y-range"><span class="var-badge var-y">y ${vm.y.icon} ${escapeHtml(vm.y.label)}</span>：<strong>${formatCoeff(testY)}</strong> ${vm.y.unit}</label>
+              <input id="s4-y-range" type="range" min="0" max="${maxSliderY}" step="${stepSizeY}" value="${testY}" data-s4-slider="y" />
+            </div>
+            <div class="s4-status-line ${bothBalancedAtTest ? 'is-ok' : 'is-err'}">
+              ${
+                bothBalancedAtTest
+                  ? `✅ 命中交點 (${formatCoeff(testX)}, ${formatCoeff(testY)})！兩座天平同時平衡！`
+                  : `⚠️ 偏離交點囉！天平 ① 左=${tilt1.leftVal} / 右=${tilt1.rightVal}；天平 ② 左=${tilt2.leftVal} / 右=${tilt2.rightVal}`
+              }
+            </div>
+            <button type="button" class="pill-btn" data-action="snap-solution">🎯 跳回唯一交點 (${formatCoeff(trueX)}, ${formatCoeff(trueY)})</button>
+
+            <div class="mini-scales-pair">
+              ${renderScaleSVG({
+                title: '驗算天平一',
+                scale: scales[0],
+                angleDeg: tilt1.angleDeg,
+                status: tilt1.isBalanced ? 'balanced' : 'tilted',
+                varMeta: vm,
+                accentColor: '#4f46e5',
+                compact: true,
+              })}
+              ${renderScaleSVG({
+                title: '驗算天平二',
+                scale: scales[1],
+                angleDeg: tilt2.angleDeg,
+                status: tilt2.isBalanced ? 'balanced' : 'tilted',
+                varMeta: vm,
+                accentColor: '#10b981',
+                compact: true,
+              })}
+            </div>
+          </div>
+        </div>
+
+        <details class="solving-recap">
+          <summary>✍️ 想一想：如果不用天平，如何用加減消去法／代入消去法解這題？</summary>
+          <ol class="recap-steps">
+            ${solvingSteps.map((st) => `<li>${escapeHtml(st)}</li>`).join('')}
+          </ol>
+        </details>
+
+        <div class="step-actions">
+          <button type="button" class="secondary-btn" data-jump-step="3">⬅ 回到第 3 步修改天平</button>
+          ${
+            level.isProcedural
+              ? `<button type="button" class="primary-btn" data-action="new-practice">🎲 再出下一題隨機練習 ➜</button>`
+              : hasNext
+                ? `<button type="button" class="primary-btn" data-action="next-level">➡️ 挑戰第 ${level.id + 1} 關：${escapeHtml(LEVELS[level.id].title)} ➜</button>`
+                : `<button type="button" class="primary-btn" data-action="start-practice">🎲 全部 12 關破關！前往無限練習場 ➜</button>`
+          }
+        </div>
+      </section>
+    `;
+  }
+
+  renderLevelMapDialog() {
+    const body = document.getElementById('level-map-body');
+    if (!body) return;
+    body.innerHTML = WORLDS.map((w) => {
+      const worldLevels = LEVELS.filter((l) => l.worldId === w.id);
+      return `
+        <section class="map-world-section">
+          <h3 class="map-world-title" style="--world-color: ${w.color}">World ${w.id}：${escapeHtml(w.name)} <small>${escapeHtml(w.subtitle)}</small></h3>
+          <div class="map-levels-grid">
+            ${worldLevels
+              .map((lvl) => {
+                const stars = this.progress.stars[lvl.id] || 0;
+                const isCurrent = this.mode === 'campaign' && this.state.level.id === lvl.id;
+                return `
+                  <button type="button" class="map-level-card ${isCurrent ? 'is-current' : ''} ${stars > 0 ? 'is-solved' : ''}" data-pick-level="${lvl.id}">
+                    <div class="map-lvl-top">
+                      <span class="map-lvl-num">Lv.${lvl.id}</span>
+                      <span class="map-lvl-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+                    </div>
+                    <div class="map-lvl-title">${lvl.unknowns[0].icon}${lvl.unknowns[1].icon} ${escapeHtml(lvl.title)}</div>
+                    <div class="map-lvl-badge">${escapeHtml(lvl.badge)}</div>
+                  </button>
+                `;
+              })
+              .join('')}
+          </div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  // ==================== EVENT HANDLING ====================
+  bindEvents() {
+    // Global header navigation
+    document.getElementById('nav-campaign')?.addEventListener('click', () => {
+      playPop();
+      this.mode = 'campaign';
+      if (this.state.level.isProcedural) {
+        this.loadLevel(LEVELS[0]);
+      } else {
+        this.render();
+      }
+      this.announce('已切換到闖關模式');
+    });
+
+    document.getElementById('nav-sandbox')?.addEventListener('click', () => {
+      playPop();
+      this.mode = 'sandbox';
+      this.render();
+      this.announce('已切換到為什麼要兩條式子雙天平沙盒');
+    });
+
+    document.getElementById('nav-practice')?.addEventListener('click', () => {
+      playPop();
+      this.startPracticeLevel();
+    });
+
+    document.getElementById('btn-toggle-sound')?.addEventListener('click', () => {
+      setMuted(!isMuted());
+      if (!isMuted()) playPop();
+      this.renderHeaderBadges();
+    });
+
+    document.getElementById('btn-open-map')?.addEventListener('click', () => {
+      playPop();
+      this.renderLevelMapDialog();
+      this.dialogs.map?.showModal();
+    });
+
+    document.getElementById('btn-open-help')?.addEventListener('click', () => {
+      playPop();
+      this.dialogs.help?.showModal();
+    });
+
+    this.dialogs.map?.addEventListener('click', (e) => {
+      const pickBtn = e.target.closest('[data-pick-level]');
+      if (!pickBtn) return;
+      const lvlId = Number(pickBtn.getAttribute('data-pick-level'));
+      const found = LEVELS.find((l) => l.id === lvlId);
+      if (found) {
+        playPop();
+        this.mode = 'campaign';
+        this.loadLevel(found);
+        this.dialogs.closeAnimated(this.dialogs.map);
+        this.announce(`已載入第 ${found.id} 關：${found.title}`);
+      }
+    });
+
+    // Main root delegated click handler
+    this.rootEl.addEventListener('click', (e) => {
+      const target = e.target;
+
+      // Mode & Stepper
+      const jumpBtn = target.closest('[data-jump-step]');
+      if (jumpBtn && !jumpBtn.disabled) {
+        playPop();
+        this.state.step = Number(jumpBtn.getAttribute('data-jump-step'));
+        this.render();
+        return;
+      }
+
+      const actionBtn = target.closest('[data-action]');
+      if (actionBtn) {
+        this.handleAction(actionBtn.getAttribute('data-action'));
+        return;
+      }
+
+      // Step 1 interactions
+      const varSlotBtn = target.closest('[data-select-var-slot]');
+      if (varSlotBtn) {
+        playPop();
+        this.state.activeVarSlot = varSlotBtn.getAttribute('data-select-var-slot');
+        this.render();
+        return;
+      }
+
+      const clearVarBtn = target.closest('[data-clear-var]');
+      if (clearVarBtn) {
+        playPop();
+        const slot = clearVarBtn.getAttribute('data-clear-var');
+        if (slot === 'x') this.state.xAssignedId = null;
+        else this.state.yAssignedId = null;
+        this.state.activeVarSlot = slot;
+        this.state.step1Feedback = null;
+        this.render();
+        return;
+      }
+
+      const varCandBtn = target.closest('[data-candidate-kind]');
+      if (varCandBtn && !varCandBtn.disabled) {
+        this.handleVarCandidateSelect(
+          varCandBtn.getAttribute('data-candidate-kind'),
+          varCandBtn.getAttribute('data-candidate-id'),
+          this.state.activeVarSlot
+        );
+        return;
+      }
+
+      // Step 2 interactions
+      const clueSlotBtn = target.closest('[data-select-clue-slot]');
+      if (clueSlotBtn) {
+        playPop();
+        this.state.activeClueSlot = Number(clueSlotBtn.getAttribute('data-select-clue-slot'));
+        this.render();
+        return;
+      }
+
+      const clearClueBtn = target.closest('[data-clear-clue]');
+      if (clearClueBtn) {
+        playPop();
+        const idx = Number(clearClueBtn.getAttribute('data-clear-clue'));
+        this.state.assignedClueOrder[idx] = null;
+        this.state.activeClueSlot = idx;
+        this.state.step2Feedback = null;
+        this.render();
+        return;
+      }
+
+      const clueCandBtn = target.closest('[data-clue-kind]');
+      if (clueCandBtn && !clueCandBtn.disabled) {
+        this.handleClueCandidateSelect(
+          clueCandBtn.getAttribute('data-clue-kind'),
+          Number(clueCandBtn.getAttribute('data-clue-idx')),
+          this.state.activeClueSlot
+        );
+        return;
+      }
+
+      // Step 3 interactions
+      const magnetBtn = target.closest('[data-select-magnet]');
+      if (magnetBtn) {
+        playClink();
+        this.state.selectedMagnetIdx = Number(magnetBtn.getAttribute('data-select-magnet'));
+        this.render();
+        return;
+      }
+
+      const applyMagBtn = target.closest('[data-apply-magnet]');
+      if (applyMagBtn) {
+        const mode = applyMagBtn.getAttribute('data-apply-magnet');
+        const chip = this.state.level.numberChips[this.state.selectedMagnetIdx];
+        if (chip) {
+          this.applyMagnetToActivePan(chip.value, mode);
+        }
+        return;
+      }
+
+      const targetScaleBtn = target.closest('[data-target-scale]');
+      if (targetScaleBtn) {
+        playPop();
+        this.lastActiveScaleIdx = Number(targetScaleBtn.getAttribute('data-target-scale'));
+        this.render();
+        return;
+      }
+
+      const panSelectBtn = target.closest('[data-select-pan]');
+      if (panSelectBtn) {
+        playPop();
+        const [sIdxStr, side] = panSelectBtn.getAttribute('data-select-pan').split(':');
+        const sIdx = Number(sIdxStr);
+        this.lastActiveScaleIdx = sIdx;
+        this.state.activePan[sIdx] = side;
+        this.render();
+        return;
+      }
+
+      const panAddBtn = target.closest('[data-pan-add]');
+      if (panAddBtn) {
+        const [sIdxStr, key, deltaStr] = panAddBtn.getAttribute('data-pan-add').split(':');
+        const sIdx = Number(sIdxStr);
+        this.adjustPanTerm(sIdx, this.state.activePan[sIdx], key, Number(deltaStr));
+        return;
+      }
+
+      const deltaBtn = target.closest('[data-term-delta]');
+      if (deltaBtn) {
+        const [sIdxStr, side, key, deltaStr] = deltaBtn.getAttribute('data-term-delta').split(':');
+        this.adjustPanTerm(Number(sIdxStr), side, key, Number(deltaStr));
+        return;
+      }
+
+      const flipBtn = target.closest('[data-term-flip]');
+      if (flipBtn) {
+        const [sIdxStr, side, key] = flipBtn.getAttribute('data-term-flip').split(':');
+        const sIdx = Number(sIdxStr);
+        playClink();
+        this.state.scales[sIdx][side][key] = roundClean(-this.state.scales[sIdx][side][key]);
+        this.state.lastCheck = null;
+        this.render();
+        return;
+      }
+
+      const clearTermBtn = target.closest('[data-term-clear]');
+      if (clearTermBtn) {
+        const [sIdxStr, side, key] = clearTermBtn.getAttribute('data-term-clear').split(':');
+        playPop();
+        this.state.scales[Number(sIdxStr)][side][key] = 0;
+        this.state.lastCheck = null;
+        this.render();
+        return;
+      }
+
+      const clearScaleBtn = target.closest('[data-clear-scale]');
+      if (clearScaleBtn) {
+        playPop();
+        this.state.scales[Number(clearScaleBtn.getAttribute('data-clear-scale'))] = createEmptyScale();
+        this.state.lastCheck = null;
+        this.render();
+        return;
+      }
+
+      const tapeBtn = target.closest('[data-toggle-tape]');
+      if (tapeBtn) {
+        playPop();
+        const idx = Number(tapeBtn.getAttribute('data-toggle-tape'));
+        this.state.showTapeDiagram[idx] = !this.state.showTapeDiagram[idx];
+        this.render();
+        return;
+      }
+
+      const expBtn = target.closest('[data-toggle-exp]');
+      if (expBtn) {
+        playPop();
+        const idx = Number(expBtn.getAttribute('data-toggle-exp'));
+        this.state.showExpansionHint[idx] = !this.state.showExpansionHint[idx];
+        this.render();
+        return;
+      }
+
+      const customSubBtn = target.closest('[data-custom-sub]');
+      if (customSubBtn) {
+        const sIdx = Number(customSubBtn.getAttribute('data-custom-sub'));
+        const input = document.getElementById(`custom-num-${sIdx}`);
+        const val = Number(input?.value);
+        if (Number.isFinite(val) && Math.abs(val) > EPS) {
+          this.adjustPanTerm(sIdx, this.state.activePan[sIdx], 'c', -val);
+        }
+        return;
+      }
+
+      // Sandbox Interactions
+      const sbPresetBtn = target.closest('[data-sb-preset]');
+      if (sbPresetBtn) {
+        playPop();
+        const idx = Number(sbPresetBtn.getAttribute('data-sb-preset'));
+        const p = getSandboxPreset(idx);
+        this.sandbox.presetIndex = idx;
+        this.sandbox.testX = p.quickPairs[0][0];
+        this.sandbox.testY = p.quickPairs[0][1];
+        this.sandbox.enableScale2 = false;
+        this.sandbox.discoveredLine1Dots = [{ x: this.sandbox.testX, y: this.sandbox.testY }];
+        this.render();
+        return;
+      }
+
+      const sbPairBtn = target.closest('[data-sb-pair]');
+      if (sbPairBtn) {
+        const [qx, qy] = sbPairBtn.getAttribute('data-sb-pair').split(',').map(Number);
+        this.updateSandboxPoint(qx, qy);
+        return;
+      }
+
+      const sbToggleS2 = target.closest('[data-sb-toggle-s2]');
+      if (sbToggleS2) {
+        playPop();
+        this.sandbox.enableScale2 = !this.sandbox.enableScale2;
+        this.render();
+        return;
+      }
+    });
+
+    // Submit handler for custom number inputs
+    this.rootEl.addEventListener('submit', (e) => {
+      const form = e.target.closest('[data-custom-num-form]');
+      if (!form) return;
+      e.preventDefault();
+      const sIdx = Number(form.getAttribute('data-custom-num-form'));
+      const input = document.getElementById(`custom-num-${sIdx}`);
+      const val = Number(input?.value);
+      if (Number.isFinite(val) && Math.abs(val) > EPS) {
+        this.adjustPanTerm(sIdx, this.state.activePan[sIdx], 'c', val);
+      }
+    });
+
+    // Input handler for range sliders & challenge checkbox
+    this.rootEl.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target.matches('[data-s4-slider]')) {
+        const axis = target.getAttribute('data-s4-slider');
+        const val = Number(target.value);
+        if (axis === 'x') this.state.testX = val;
+        else this.state.testY = val;
+        this.render();
+        return;
+      }
+
+      if (target.matches('[data-sb-slider]')) {
+        const axis = target.getAttribute('data-sb-slider');
+        const val = Number(target.value);
+        const nx = axis === 'x' ? val : this.sandbox.testX;
+        const ny = axis === 'y' ? val : this.sandbox.testY;
+        this.updateSandboxPoint(nx, ny, false);
+        // Preserve slider focus smoothly after re-render
+        const refocused = this.rootEl.querySelector(`[data-sb-slider="${axis}"]`);
+        refocused?.focus();
+      }
+    });
+
+    this.rootEl.addEventListener('change', (e) => {
+      if (e.target.matches('[data-action="toggle-challenge"]')) {
+        this.challengeSkipGuided = e.target.checked;
+        if (this.challengeSkipGuided && this.state.step < 3) {
+          this.state.xAssignedId = 'u0';
+          this.state.yAssignedId = 'u1';
+          this.state.assignedClueOrder = [0, 1];
+          this.state.step = 3;
+          this.render();
+        }
+      }
+    });
+
+    // Drag-and-drop support (desktop bonus on top of click/keyboard)
+    this.bindDragAndDrop();
+  }
+
+  bindDragAndDrop() {
+    let dragPayload = null;
+    this.rootEl.addEventListener('dragstart', (e) => {
+      const item = e.target.closest('[data-drag-kind]');
+      if (!item) return;
+      const kind = item.getAttribute('data-drag-kind');
+      if (kind === 'var-candidate') {
+        dragPayload = {
+          kind,
+          candKind: item.getAttribute('data-candidate-kind'),
+          id: item.getAttribute('data-candidate-id'),
+        };
+      } else if (kind === 'clue-candidate') {
+        dragPayload = {
+          kind,
+          clueKind: item.getAttribute('data-clue-kind'),
+          idx: Number(item.getAttribute('data-clue-idx')),
+        };
+      } else if (kind === 'magnet') {
+        dragPayload = {
+          kind,
+          magnetIdx: Number(item.getAttribute('data-magnet-idx')),
+        };
+      }
+      e.dataTransfer?.setData('text/plain', kind);
+    });
+
+    this.rootEl.addEventListener('dragover', (e) => {
+      const zone = e.target.closest('[data-drop-var], [data-drop-clue], [data-drop-pan]');
+      if (!zone) return;
+      e.preventDefault();
+      zone.classList.add('is-drag-over');
+    });
+
+    this.rootEl.addEventListener('dragleave', (e) => {
+      const zone = e.target.closest('[data-drop-var], [data-drop-clue], [data-drop-pan]');
+      zone?.classList.remove('is-drag-over');
+    });
+
+    this.rootEl.addEventListener('drop', (e) => {
+      const zone = e.target.closest('[data-drop-var], [data-drop-clue], [data-drop-pan]');
+      if (!zone || !dragPayload) return;
+      e.preventDefault();
+      zone.classList.remove('is-drag-over');
+
+      if (dragPayload.kind === 'var-candidate' && zone.hasAttribute('data-drop-var')) {
+        this.handleVarCandidateSelect(
+          dragPayload.candKind,
+          dragPayload.id,
+          zone.getAttribute('data-drop-var')
+        );
+      } else if (dragPayload.kind === 'clue-candidate' && zone.hasAttribute('data-drop-clue')) {
+        this.handleClueCandidateSelect(
+          dragPayload.clueKind,
+          dragPayload.idx,
+          Number(zone.getAttribute('data-drop-clue'))
+        );
+      } else if (dragPayload.kind === 'magnet' && zone.hasAttribute('data-drop-pan')) {
+        const [sIdxStr, side] = zone.getAttribute('data-drop-pan').split(':');
+        const sIdx = Number(sIdxStr);
+        this.state.activePan[sIdx] = side;
+        this.state.selectedMagnetIdx = dragPayload.magnetIdx;
+        const chip = this.state.level.numberChips[dragPayload.magnetIdx];
+        if (chip) {
+          this.adjustPanTerm(sIdx, side, 'c', chip.value);
+        }
+      }
+      dragPayload = null;
+    });
+  }
+
+  handleVarCandidateSelect(candKind, candId, targetSlot) {
+    const level = this.state.level;
+    if (candKind === 'distractor') {
+      const dist = level.unknownDistractors.find((d) => d.id === candId);
+      playError();
+      this.state.step1Feedback = { type: 'err', text: dist?.reason || '這是已知條件，不是未知數喔！' };
+      this.announce(this.state.step1Feedback.text);
+      this.render();
+      return;
+    }
+
+    playDrop();
+    if (targetSlot === 'x') {
+      if (this.state.yAssignedId === candId) this.state.yAssignedId = null;
+      this.state.xAssignedId = candId;
+      if (!this.state.yAssignedId) this.state.activeVarSlot = 'y';
+    } else {
+      if (this.state.xAssignedId === candId) this.state.xAssignedId = null;
+      this.state.yAssignedId = candId;
+      if (!this.state.xAssignedId) this.state.activeVarSlot = 'x';
+    }
+
+    if (this.state.xAssignedId && this.state.yAssignedId) {
+      const vm = getVarMeta(level, this.isSwapped());
+      this.state.step1Feedback = {
+        type: 'ok',
+        text: `設定完成！x = ${vm.x.label}，y = ${vm.y.label}（小秘密：就算兩者互換也完全算對喔！）`,
+      };
+      this.announce(this.state.step1Feedback.text);
+    } else {
+      this.state.step1Feedback = null;
+    }
+    this.render();
+  }
+
+  handleClueCandidateSelect(clueKind, clueIdx, targetSlot) {
+    const level = this.state.level;
+    if (clueKind === 'distractor') {
+      playError();
+      this.state.step2Feedback = { type: 'err', text: level.clueDistractor.reason };
+      this.announce(this.state.step2Feedback.text);
+      this.render();
+      return;
+    }
+
+    playDrop();
+    const otherSlot = targetSlot === 0 ? 1 : 0;
+    if (this.state.assignedClueOrder[otherSlot] === clueIdx) {
+      this.state.assignedClueOrder[otherSlot] = null;
+    }
+    this.state.assignedClueOrder[targetSlot] = clueIdx;
+    if (this.state.assignedClueOrder[otherSlot] === null) {
+      this.state.activeClueSlot = otherSlot;
+    }
+
+    if (this.state.assignedClueOrder[0] !== null && this.state.assignedClueOrder[1] !== null) {
+      this.state.step2Feedback = {
+        type: 'ok',
+        text: '兩條線索都鎖定了！現在就把它們放上雙天平吧！',
+      };
+      this.announce(this.state.step2Feedback.text);
+    } else {
+      this.state.step2Feedback = null;
+    }
+    this.render();
+  }
+
+  adjustPanTerm(scaleIdx, side, key, delta) {
+    playClink();
+    this.lastActiveScaleIdx = scaleIdx;
+    const pan = this.state.scales[scaleIdx][side];
+    pan[key] = roundClean((pan[key] ?? 0) + delta);
+    this.state.activePan[scaleIdx] = side;
+    this.state.lastCheck = null;
+    this.render();
+  }
+
+  applyMagnetToActivePan(value, mode) {
+    // Apply to whichever scale was interacted with most recently? Wait: let's track `lastActiveScaleIdx`!
+    const sIdx = this.lastActiveScaleIdx ?? 0;
+    const side = this.state.activePan[sIdx];
+    const [op, kind] = mode.split('-');
+    const signedVal = op === 'sub' ? -value : value;
+    const key = kind === 'x' ? 'x' : kind === 'y' ? 'y' : 'c';
+    this.adjustPanTerm(sIdx, side, key, signedVal);
+  }
+
+  handleAction(action) {
+    if (action === 'swap-xy') {
+      playPop();
+      const prevX = this.state.xAssignedId;
+      this.state.xAssignedId = this.state.yAssignedId;
+      this.state.yAssignedId = prevX;
+      this.state.lastCheck = null;
+      this.render();
+      this.announce('已對調 x 與 y 的定義');
+      return;
+    }
+
+    if (action === 'goto-step-2') {
+      playPop();
+      this.state.step = 2;
+      this.render();
+      return;
+    }
+
+    if (action === 'goto-step-3') {
+      playPop();
+      this.state.step = 3;
+      this.render();
+      return;
+    }
+
+    if (action === 'next-hint') {
+      playPop();
+      if (this.state.hintTier < 3) {
+        this.state.hintTier += 1;
+        this.announce(`顯示第 ${this.state.hintTier} 層提示`);
+        this.render();
+      }
+      return;
+    }
+
+    if (action === 'verify-scales') {
+      this.runVerification();
+      return;
+    }
+
+    if (action === 'goto-step-4') {
+      playVictory();
+      const vm = getVarMeta(this.state.level, this.isSwapped());
+      this.state.testX = vm.xVal;
+      this.state.testY = vm.yVal;
+      this.state.step = 4;
+      this.render();
+      return;
+    }
+
+    if (action === 'snap-solution') {
+      playBalanceLock();
+      const vm = getVarMeta(this.state.level, this.isSwapped());
+      this.state.testX = vm.xVal;
+      this.state.testY = vm.yVal;
+      this.render();
+      return;
+    }
+
+    if (action === 'next-level') {
+      playPop();
+      const next = LEVELS.find((l) => l.id === this.state.level.id + 1);
+      if (next) this.loadLevel(next);
+      return;
+    }
+
+    if (action === 'new-practice' || action === 'start-practice') {
+      playPop();
+      this.startPracticeLevel();
+      return;
+    }
+  }
+
+  runVerification() {
+    const { level, scales, assignedClueOrder } = this.state;
+    const swapped = this.isSwapped();
+    const order = [assignedClueOrder[0] ?? 0, assignedClueOrder[1] ?? 1];
+    const res = verifyLevelAttempt(level, swapped, scales[0], scales[1], order);
+    this.state.lastCheck = res;
+
+    if (res.passed) {
+      playBalanceLock();
+      let stars = 3;
+      if (this.state.hintTier >= 2 || this.state.retries >= 3) stars = 2;
+      if (this.state.hintTier >= 3 && this.state.retries >= 4) stars = 1;
+      this.state.earnedStars = stars;
+      this.saveProgress(level.id, stars);
+      this.announce(`太棒了！${res.feedback}`);
+    } else {
+      playError();
+      this.state.retries += 1;
+      this.announce(res.feedback);
+    }
+    this.render();
+  }
+
+  startPracticeLevel() {
+    this.mode = 'practice';
+    const nextLvl = generatePracticeLevel(this.practiceCounter);
+    this.practiceCounter += 1;
+    this.loadLevel(nextLvl);
+    this.announce(`已產生新的隨機練習題：${nextLvl.title}`);
+  }
+
+  updateSandboxPoint(nx, ny, playSound = true) {
+    const preset = getSandboxPreset(this.sandbox.presetIndex);
+    this.sandbox.testX = nx;
+    this.sandbox.testY = ny;
+
+    const tilt1 = evaluateScaleTilt(preset.scale1, nx, ny);
+    const tilt2 = evaluateScaleTilt(preset.scale2, nx, ny);
+    if (tilt1.isBalanced) {
+      const exists = this.sandbox.discoveredLine1Dots.some((d) => d.x === nx && d.y === ny);
+      if (!exists) {
+        this.sandbox.discoveredLine1Dots.push({ x: nx, y: ny });
+      }
+    }
+    if (playSound) {
+      if (tilt1.isBalanced && this.sandbox.enableScale2 && tilt2.isBalanced) {
+        playBalanceLock();
+      } else if (tilt1.isBalanced) {
+        playClink();
+      } else {
+        playPop();
+      }
+    }
+    this.render();
+  }
+}
+
+return { GameController };
+})();
+
+// === Module: ../../shared/ui/dialogHelper.js ===
+const __mod_dialogHelper = (() => {
+/**
+ * Accessible native <dialog> helper with progressive top-layer exit animation fallback
+ * and bounding-box light-dismiss fallback (`closedby="any"`).
+ */
+
+let supportsDisplayTransition;
+
+function canTransitionDisplay() {
+  if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+  if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+    return false;
+  }
+  const probe = document.createElement('div');
+  probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+  document.body.appendChild(probe);
+  getComputedStyle(probe).display;
+  probe.style.display = 'none';
+  supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+  probe.remove();
+  return supportsDisplayTransition;
+}
+
+function supportsTopLayerExit() {
+  return Boolean(window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay());
+}
+
+async function closeTopLayer(dialog) {
+  if (!dialog?.open) return;
+  if (!supportsTopLayerExit()) {
+    dialog.setAttribute('data-closing', '');
+    const animations = dialog.getAnimations({ subtree: true });
+    if (animations.length > 0) {
+      await Promise.race([
+        Promise.allSettled(animations.map((a) => a.finished)),
+        new Promise((r) => setTimeout(r, 400)),
+      ]);
+    }
+    if (!dialog.hasAttribute('data-closing')) return;
+    dialog.removeAttribute('data-closing');
+  }
+  dialog.close();
+}
+
+function setupAccessibleDialogs(selector = 'dialog.lab-dialog') {
+  const dialogs = Array.from(document.querySelectorAll(selector));
+
+  // Fallback for closedby="any" where HTMLDialogElement.prototype.closedBy is unsupported
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    const outside = (e, dialog) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    for (const dialog of dialogs) {
+      let pressedOutside = false;
+      dialog.addEventListener('pointerdown', (e) => {
+        pressedOutside = outside(e, dialog);
+      });
+      dialog.addEventListener('pointerup', (e) => {
+        if (pressedOutside && outside(e, dialog)) {
+          closeTopLayer(dialog);
+        }
+      });
+    }
+  }
+
+  for (const dialog of dialogs) {
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeTopLayer(dialog);
+    });
+    dialog.addEventListener('close', () => {
+      dialog.removeAttribute('data-closing');
+      dialog.returnValue = '';
+    });
+  }
+
+  return {
+    dialogs,
+    closeAnimated: closeTopLayer,
+  };
+}
+
+return { canTransitionDisplay, supportsTopLayerExit, closeTopLayer, setupAccessibleDialogs };
+})();
+
+// === Module: ./src/main.js ===
+(() => {
+const { setupAccessibleDialogs } = __mod_dialogHelper;
+const { GameController } = __mod_gameController;
+
+function initApp() {
+  const rootEl = document.getElementById('game-root');
+  const announcerEl = document.getElementById('sr-announcer');
+  if (!rootEl) return;
+
+  const announce = (msg) => {
+    if (!announcerEl) return;
+    announcerEl.textContent = '';
+    requestAnimationFrame(() => {
+      announcerEl.textContent = msg;
+    });
+  };
+
+  const { closeAnimated } = setupAccessibleDialogs('dialog.lab-dialog');
+  const dialogs = {
+    map: document.getElementById('level-map-dialog'),
+    help: document.getElementById('help-dialog'),
+    closeAnimated,
+  };
+
+  window.__eqDetective = new GameController(rootEl, dialogs, announce);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+})();
+</script>
+</body>
+</html>
