@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>九九乘法冒險島：直覺探索與速算實驗室</title>
+  <link rel="stylesheet" href="../../shared/styles/tokens.css">
+  <link rel="stylesheet" href="./src/styles/game.css">
+</head>
+<body>
+  <div class="game-shell">
+    <header class="game-header">
+      <div class="header-left">
+        <a href="../../index.html" class="tool-btn back-hub-link">🏠 回遊戲大廳</a>
+        <h1 class="game-title">✖️ 九九乘法冒險島</h1>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item stat-stars">
+          <span id="stat-total-stars">0 / 30 ⭐️</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="mode-tabs" role="tablist" aria-label="模式切換">
+      <button class="tab-btn active" data-mode="adventure" role="tab">🗺️ 冒險闖關 (10關)</button>
+      <button class="tab-btn" data-mode="sandbox" role="tab">🔍 點陣探索沙盒</button>
+      <button class="tab-btn" data-mode="table" role="tab">📊 九九乘法總表</button>
+    </nav>
+
+    <!-- Panel 1: Adventure Mode -->
+    <main id="panel-adventure" class="screen-panel">
+      <!-- Screen 1.1: Level Selection Map -->
+      <section id="screen-adventure-map">
+        <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">選擇關卡</h2>
+        <p style="color:var(--text-secondary);margin-bottom:16px;">
+          循序漸進打通乘法概念！觀察點陣圖、破除加法迷思，挑戰成為乘法大宗師！
+        </p>
+        <div id="level-grid" class="level-select-grid"></div>
+      </section>
+
+      <!-- Screen 1.2: Question Play Area -->
+      <section id="screen-adventure-play" class="hidden">
+        <div class="quiz-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <button id="btn-back-to-map" class="tool-btn" style="min-height:36px;padding:4px 12px;">← 返回地圖</button>
+            <span id="quiz-level-title" style="font-weight:700;color:var(--text-secondary);"></span>
+          </div>
+
+          <div class="quiz-progress-bar">
+            <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+          </div>
+
+          <div class="quiz-prompt-box">
+            <div id="quiz-prompt-text" class="quiz-prompt"></div>
+            <div id="quiz-hint" class="quiz-hint-text"></div>
+          </div>
+
+          <!-- Dynamic SVG Array Helper -->
+          <div id="quiz-viz-preview" style="margin-bottom:20px;display:flex;justify-content:center;"></div>
+
+          <div class="input-row">
+            <input type="number" id="answer-input" class="answer-input" placeholder="?" aria-label="請輸入答案" />
+            <button id="btn-submit-answer" class="tool-btn primary" style="min-height:48px;padding:0 24px;font-size:1.1rem;">送出答案</button>
+          </div>
+
+          <!-- Virtual Keypad for touch/coarse devices -->
+          <div class="keypad-grid">
+            <button class="key-btn" data-val="1">1</button>
+            <button class="key-btn" data-val="2">2</button>
+            <button class="key-btn" data-val="3">3</button>
+            <button class="key-btn" data-val="4">4</button>
+            <button class="key-btn" data-val="5">5</button>
+            <button class="key-btn" data-val="6">6</button>
+            <button class="key-btn" data-val="7">7</button>
+            <button class="key-btn" data-val="8">8</button>
+            <button class="key-btn" data-val="9">9</button>
+            <button class="key-btn" data-val="clear">C</button>
+            <button class="key-btn" data-val="0">0</button>
+            <button class="key-btn" data-val="backspace">⌫</button>
+          </div>
+
+          <div id="quiz-feedback" class="feedback-banner hidden" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Panel 2: Sandbox Mode -->
+    <section id="panel-sandbox" class="screen-panel hidden">
+      <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">點陣直覺探索沙盒</h2>
+      <p style="color:var(--text-secondary);margin-bottom:16px;">
+        自由點選兩數，觀察點陣方格排列與分組，點擊「旋轉視角」理解乘法交換律！
+      </p>
+
+      <div class="sandbox-controls">
+        <div class="control-group">
+          <span>每組：</span>
+          <div id="selector-a" class="number-selector"></div>
+        </div>
+        <div class="control-group">
+          <span>共有：</span>
+          <div id="selector-b" class="number-selector"></div>
+          <span>組</span>
+        </div>
+        <button id="btn-rotate-grid" class="tool-btn" style="margin-left:auto;">🔄 旋轉視角 (交換律)</button>
+      </div>
+
+      <div class="viz-display">
+        <div id="sandbox-formula" class="formula-card"></div>
+        <div id="sandbox-svg-container" class="array-svg-wrapper"></div>
+      </div>
+    </section>
+
+    <!-- Panel 3: 9x9 Table Mode -->
+    <section id="panel-table" class="screen-panel hidden">
+      <h2 style="font-size:var(--font-size-xl);margin-bottom:8px;">九九乘法大表矩陣</h2>
+      <p style="color:var(--text-secondary);margin-bottom:16px;">
+        點擊表格中的任意數字，立即展開對應的連加分解與視覺方格點陣！
+      </p>
+
+      <div class="table-matrix-wrapper">
+        <table id="matrix-table" class="table-matrix"></table>
+      </div>
+
+      <div id="table-detail" style="text-align:center;"></div>
+    </section>
+  </div>
+
+  <!-- Clear Dialog -->
+  <dialog id="level-clear-dialog" class="lab-dialog">
+    <div class="dialog-content">
+      <h3 style="font-size:var(--font-size-2xl);color:var(--text-primary);margin-bottom:8px;">🎉 恭喜通關！</h3>
+      <div id="clear-stars" class="dialog-stars">⭐️⭐️⭐️</div>
+      <p id="clear-message" style="color:var(--text-secondary);margin-bottom:24px;"></p>
+      <button id="btn-next-level" class="tool-btn primary" style="min-height:44px;padding:0 32px;">回到關卡清單</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

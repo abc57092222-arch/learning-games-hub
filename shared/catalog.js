@@ -19,4 +19,19 @@ export const GAME_CATALOG = [
     storageKey: 'eq_detective_progress_v1',
     maxStars: 36,
   },
+  {
+    id: 'multiplication-grid',
+    title: '九九乘法冒險島：直覺探索與速算實驗室',
+    shortTitle: '九九乘法冒險島',
+    subject: '數學',
+    grade: '小學三年級數學',
+    icon: '✖️',
+    accent: '#0284c7',
+    tags: ['九九乘法', '點陣圖', '乘法交換律', '迷思診斷', '四則運算'],
+    description:
+      '融合視覺點陣圖、乘法交換律旋轉視角、相鄰推導與情境應用題！提供 10 關冒險挑戰、探索沙盒與完整 9x9 大表，內建誤乘為加與口訣混淆智慧診斷。',
+    entry: './games/multiplication-grid/index.html',
+    storageKey: 'multiplication_grid_progress_v1',
+    maxStars: 30,
+  },
 ];

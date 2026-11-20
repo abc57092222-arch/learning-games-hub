@@ -1,0 +1,36 @@
+{
+  "id": "multiplication-grid",
+  "title": "九九乘法冒險島：直覺探索與速算實驗室",
+  "entryHtml": "index.html",
+  "styles": [
+    "../../shared/styles/tokens.css",
+    "./src/styles/game.css"
+  ],
+  "modules": [
+    {
+      "key": "soundEngine",
+      "path": "../../shared/audio/soundEngine.js"
+    },
+    {
+      "key": "dialogHelper",
+      "path": "../../shared/ui/dialogHelper.js"
+    },
+    {
+      "key": "multiplicationCore",
+      "path": "./src/multiplicationCore.js"
+    },
+    {
+      "key": "gridVisualizer",
+      "path": "./src/gridVisualizer.js"
+    },
+    {
+      "key": "gameApp",
+      "path": "./src/gameApp.js"
+    },
+    {
+      "key": "main",
+      "path": "./src/main.js",
+      "isEntry": true
+    }
+  ]
+}
